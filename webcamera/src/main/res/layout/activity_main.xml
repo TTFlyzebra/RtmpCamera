@@ -3,13 +3,50 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
     android:background="#000"
     tools:context=".MainActivity">
 
-    <TextureView
-        android:layout_width="720px"
-        android:layout_height="1280px"
-        android:id="@+id/ac_main_tuv"/>
+    <RelativeLayout
+        android:id="@+id/rl01"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center">
+
+        <TextureView
+            android:id="@+id/ac_main_tuv"
+            android:layout_width="1px"
+            android:layout_height="1px" />
+
+        <com.flyzebra.opengl.GlVideoView
+            android:id="@+id/ac_main_gl"
+            android:layout_width="960px"
+            android:layout_height="540px" />
+
+    </RelativeLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="320px"
+        android:gravity="center"
+        android:layout_alignParentTop="true" >
+        <Button
+            android:text="@string/switch_camera"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="switchCamera"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="320px"
+        android:gravity="center"
+        android:layout_alignParentBottom="true" >
+        <Button
+            android:text="@string/push_camera"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="pushCamera"/>
+    </LinearLayout>
 
 </RelativeLayout>

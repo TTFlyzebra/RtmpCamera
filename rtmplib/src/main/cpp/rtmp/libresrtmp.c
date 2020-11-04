@@ -14,7 +14,7 @@
  	RTMP* rtmp = RTMP_Alloc();
  	if (rtmp == NULL) {
  		LOGD("RTMP_Alloc=NULL");
- 		return NULL;
+ 		return -1;
  	}
 
  	RTMP_Init(rtmp);
@@ -22,9 +22,8 @@
 
  	if (!ret) {
  		RTMP_Free(rtmp);
- 		rtmp=NULL;
- 		LOGD("RTMP_SetupURL=ret");
- 		return NULL;
+		LOGD("RTMP_SetupURL ret=%d",ret);
+ 		return -1;
  	}
  	if (isPublishMode) {
  		RTMP_EnableWrite(rtmp);
@@ -33,9 +32,8 @@
  	ret = RTMP_Connect(rtmp, NULL);
  	if (!ret) {
  		RTMP_Free(rtmp);
- 		rtmp=NULL;
- 		LOGD("RTMP_Connect=ret");
- 		return NULL;
+ 		LOGD("RTMP_Connect ret=%d",ret);
+ 		return -1;
  	}
  	ret = RTMP_ConnectStream(rtmp, 0);
 
@@ -43,9 +41,8 @@
  		ret = RTMP_ConnectStream(rtmp, 0);
  		RTMP_Close(rtmp);
  		RTMP_Free(rtmp);
- 		rtmp=NULL;
- 		LOGD("RTMP_ConnectStream=ret");
- 		return NULL;
+ 		LOGD("RTMP_ConnectStream ret=%s",ret);
+ 		return -1;
  	}
  	(*env)->ReleaseStringUTFChars(env, url_, url);
  	LOGD("RTMP_OPENED");

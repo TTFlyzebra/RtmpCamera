@@ -10,7 +10,7 @@ import android.util.Size;
 
 public class CameraUtils {
 
-    private Size getCameraSize(Context context, int deviceWidth, int deviceHeigh) {
+    public static Size getCameraSize(Context context, int deviceWidth, int deviceHeigh) {
         Size findSize = null;
         try {
             CameraManager mCameraManager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
@@ -20,6 +20,7 @@ public class CameraUtils {
                 Size[] sizes = streamConfigurationMap.getOutputSizes(ImageFormat.JPEG);
                 for (int i = 0; i < sizes.length; i++) { //遍历所有Size
                     Size itemSize = sizes[i];
+                    FlyLog.e("当前itemSize 宽=" + itemSize.getWidth() + "高=" + itemSize.getHeight());
                     if (itemSize.getHeight() < (deviceWidth) && itemSize.getHeight() > (deviceWidth)) {
                         if (findSize != null) { //如果之前已经找到一个匹配的宽度
                             if (Math.abs(deviceHeigh - itemSize.getWidth()) < Math.abs(deviceHeigh - findSize.getWidth())) { //求绝对值算出最接近设备高度的尺寸
