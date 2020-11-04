@@ -21,7 +21,7 @@ public class FlvRtmpClient {
     public static final int VIDEO_BITRATE = 500000; // 500Kbps
     public static final int VIDEO_IFRAME_INTERVAL = 5; // 2 seconds between I-frames
     public static final int VIDEO_FPS = 24;
-    public static final int AAC_SAMPLE_RATE = 44100;
+    public static final int AAC_SAMPLE_RATE = 16000;
     public static final int AAC_BITRATE = 32 * 1024;
 
     public static final int FLV_RTMP_PACKET_TYPE_VIDEO = 9;

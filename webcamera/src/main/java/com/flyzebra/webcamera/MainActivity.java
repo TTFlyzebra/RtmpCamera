@@ -23,7 +23,8 @@ import android.view.View;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
-import com.flyzebra.media.VideoEncode;
+import com.flyzebra.media.AudioStream;
+import com.flyzebra.media.VideoStream;
 import com.flyzebra.rtmp.FlvRtmpClient;
 import com.flyzebra.utils.FlyLog;
 
@@ -40,8 +41,6 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
 
     private TextureView mTextureView;
 //    private GlVideoView glVideoView;
-
-    private VideoEncode mediaEncoder;
 
     private static final HandlerThread mThread = new HandlerThread("bgHandler");
 
@@ -76,7 +75,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
         @Override
         public void onError(CameraDevice cameraDevice, int arg1) {
             cameraDevice.close();
-            mCameraDevice=null;
+            mCameraDevice = null;
         }
 
         @Override
@@ -145,10 +144,8 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
             return;
         }
         try {
-            if(mediaEncoder==null){
-                mediaEncoder = new VideoEncode();
-            }
-            mediaEncoder.start();
+            VideoStream.getInstance().start();
+            AudioStream.getInstance().start();
             mImageReader = ImageReader.newInstance(FlvRtmpClient.VIDEO_WIDTH, FlvRtmpClient.VIDEO_HEIGHT, ImageFormat.YUV_420_888, 2);
             mImageReader.setOnImageAvailableListener(new OnImageAvailableListenerImpl(), mBackgroundHandler);
             mCameraManager.openCamera(cameraID, deviceCallBack, mBackgroundHandler);
@@ -158,10 +155,8 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     }
 
     private void closeCamera() {
-        if (null != mediaEncoder) {
-            mediaEncoder.stop();
-            mediaEncoder = null;
-        }
+        AudioStream.getInstance().stop();
+        VideoStream.getInstance().stop();
         if (null != mCaptureSession) {
             mCaptureSession.close();
             mCaptureSession = null;
@@ -176,9 +171,9 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
         }
     }
 
-    public void switchCamera(View view){
+    public void switchCamera(View view) {
         closeCamera();
-        cameraID = cameraID.equals("0")?"1":"0";
+        cameraID = cameraID.equals("0") ? "1" : "0";
         openCamera();
     }
 
@@ -210,9 +205,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
                 lock.unlock();
 //                FlyLog.d("widht=%d, height=%d, yL=%d, uL=%d, vL=%d",image.getWidth(),image.getHeight(),y.length,u.length,v.length);
 //                glVideoView.pushyuvdata(y,u,v);
-                if(mediaEncoder!=null){
-                    mediaEncoder.pushyuvdata(y,u,v);
-                }
+                VideoStream.getInstance().pushyuvdata(y, u, v);
             }
             image.close();
         }

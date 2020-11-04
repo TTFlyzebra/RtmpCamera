@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * 2019/6/18 16:12
  * Describ:
  **/
-public class VideoEncode implements Runnable {
+public class VideoStream implements Runnable {
     private MediaCodec mediaCodec;
 
     // parameters for the encoder
@@ -43,16 +43,19 @@ public class VideoEncode implements Runnable {
     private ByteBuffer yuvBuffer = ByteBuffer.allocateDirect(1280 * 720 * 3 / 2 * 10);
     private byte[] sendData = new byte[1280 * 720 * 3 / 2];
 
-    public static VideoEncode getInstance() {
+    public static VideoStream getInstance() {
         return VideoStreamHolder.sInstance;
     }
 
+    private VideoStream(){
+
+    }
+
     private static class VideoStreamHolder {
-        public static final VideoEncode sInstance = new VideoEncode();
+        public static final VideoStream sInstance = new VideoStream();
     }
 
     public void start() {
-        FlvRtmpClient.getInstance().open(FlvRtmpClient.RTMP_ADDR);
         isStop.set(false);
         initMediaCodec();
         tHandler.post(this);
@@ -69,6 +72,7 @@ public class VideoEncode implements Runnable {
             }
         }
         isRunning.set(true);
+        FlvRtmpClient.getInstance().open(FlvRtmpClient.RTMP_ADDR);
         while (!isStop.get()) {
             boolean flag = false;
             synchronized (mLock) {
@@ -114,6 +118,7 @@ public class VideoEncode implements Runnable {
                     break;
             }
         }
+        FlvRtmpClient.getInstance().close();
         mediaCodec.stop();
         mediaCodec.release();
         mediaCodec = null;
@@ -168,7 +173,6 @@ public class VideoEncode implements Runnable {
 
     public void stop() {
         tHandler.removeCallbacksAndMessages(null);
-        FlvRtmpClient.getInstance().close();
         isStop.set(true);
     }
 
