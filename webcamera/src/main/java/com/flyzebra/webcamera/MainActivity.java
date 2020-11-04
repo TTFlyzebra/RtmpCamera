@@ -1,8 +1,5 @@
 package com.flyzebra.webcamera;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -23,8 +20,11 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+
 import com.flyzebra.media.VideoEncode;
-import com.flyzebra.opengl.GlVideoView;
+import com.flyzebra.rtmp.FlvRtmpClient;
 import com.flyzebra.utils.FlyLog;
 
 import java.util.Arrays;
@@ -37,8 +37,6 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     private CaptureRequest.Builder mPreviewRequestBuilder;
     private ImageReader mImageReader;
     private String cameraID = "0";
-    private int width = 1280;
-    private int height = 720;
 
     private TextureView mTextureView;
 //    private GlVideoView glVideoView;
@@ -60,11 +58,12 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
                 mCameraDevice = cameraDevice;
 
                 SurfaceTexture texture = mTextureView.getSurfaceTexture();
+                texture.setDefaultBufferSize(FlvRtmpClient.VIDEO_WIDTH, FlvRtmpClient.VIDEO_HEIGHT);
                 Surface surface = new Surface(texture);
 
                 mPreviewRequestBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
-                mPreviewRequestBuilder.set(CaptureRequest.JPEG_THUMBNAIL_SIZE, new Size(width,height));
+                mPreviewRequestBuilder.set(CaptureRequest.JPEG_THUMBNAIL_SIZE, new Size(FlvRtmpClient.VIDEO_WIDTH, FlvRtmpClient.VIDEO_HEIGHT));
                 mPreviewRequestBuilder.addTarget(surface);
                 mPreviewRequestBuilder.addTarget(mImageReader.getSurface());
                 mCameraDevice.createCaptureSession(Arrays.asList(surface, mImageReader.getSurface()), mCaptureStateCallback, mBackgroundHandler);
@@ -150,7 +149,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
                 mediaEncoder = new VideoEncode();
             }
             mediaEncoder.start();
-            mImageReader = ImageReader.newInstance(width, height, ImageFormat.YUV_420_888, 2);
+            mImageReader = ImageReader.newInstance(FlvRtmpClient.VIDEO_WIDTH, FlvRtmpClient.VIDEO_HEIGHT, ImageFormat.YUV_420_888, 2);
             mImageReader.setOnImageAvailableListener(new OnImageAvailableListenerImpl(), mBackgroundHandler);
             mCameraManager.openCamera(cameraID, deviceCallBack, mBackgroundHandler);
         } catch (CameraAccessException e) {

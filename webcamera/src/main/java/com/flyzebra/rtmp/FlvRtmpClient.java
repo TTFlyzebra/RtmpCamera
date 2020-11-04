@@ -51,9 +51,9 @@ public class FlvRtmpClient {
         synchronized (lock) {
             ret = RtmpClient.write(jniRtmpPointer.get(), data, data.length, type, ts);
         }
-//        if (data[0] == (byte) 0x17) {
+        if (data[0] == (byte) 0x17) {
             FlyLog.d("rtmp send:%s[%d]", ByteUtil.bytes2String(data, 16),data.length);
-//        }
+        }
         if (ret != 0) {
             FlyLog.e("rtmp send error!");
         }
