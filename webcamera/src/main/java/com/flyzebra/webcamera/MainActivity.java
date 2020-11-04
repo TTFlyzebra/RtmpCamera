@@ -23,7 +23,7 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 
-import com.flyzebra.media.MediaEncoder;
+import com.flyzebra.media.VideoEncode;
 import com.flyzebra.opengl.GlVideoView;
 import com.flyzebra.utils.FlyLog;
 
@@ -36,14 +36,14 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     private CameraDevice mCameraDevice;
     private CaptureRequest.Builder mPreviewRequestBuilder;
     private ImageReader mImageReader;
-    private String cameraID = "1";
-    private int width = 640;
-    private int height = 360;
+    private String cameraID = "0";
+    private int width = 1280;
+    private int height = 720;
 
     private TextureView mTextureView;
-    private GlVideoView glVideoView;
+//    private GlVideoView glVideoView;
 
-    private MediaEncoder mediaEncoder;
+    private VideoEncode mediaEncoder;
 
     private static final HandlerThread mThread = new HandlerThread("bgHandler");
 
@@ -115,7 +115,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
         mTextureView = findViewById(R.id.ac_main_tuv);
         mTextureView.setSurfaceTextureListener(this);
 
-        glVideoView = findViewById(R.id.ac_main_gl);
+//        glVideoView = findViewById(R.id.ac_main_gl);
 
     }
 
@@ -147,7 +147,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
         }
         try {
             if(mediaEncoder==null){
-                mediaEncoder = new MediaEncoder();
+                mediaEncoder = new VideoEncode();
             }
             mediaEncoder.start();
             mImageReader = ImageReader.newInstance(width, height, ImageFormat.YUV_420_888, 2);
@@ -209,8 +209,11 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
                     planes[2].getBuffer().get(v);
                 }
                 lock.unlock();
-                glVideoView.pushyuvdata(y,u,v);
-                mediaEncoder.pushyuvdata(y,u,v);
+//                FlyLog.d("widht=%d, height=%d, yL=%d, uL=%d, vL=%d",image.getWidth(),image.getHeight(),y.length,u.length,v.length);
+//                glVideoView.pushyuvdata(y,u,v);
+                if(mediaEncoder!=null){
+                    mediaEncoder.pushyuvdata(y,u,v);
+                }
             }
             image.close();
         }

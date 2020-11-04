@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * 2019/6/18 16:12
  * Describ:
  **/
-public class MediaEncoder implements Runnable {
+public class VideoEncode implements Runnable {
     private MediaCodec mediaCodec;
 
     // parameters for the encoder
@@ -39,12 +39,16 @@ public class MediaEncoder implements Runnable {
 
     private static final Handler tHandler = new Handler(sWorkerThread.getLooper());
 
-    public static MediaEncoder getInstance() {
+    private final Object mLock = new Object();
+    private ByteBuffer yuvBuffer = ByteBuffer.allocateDirect(1280 * 720 * 3 / 2 * 10);
+    private byte[] sendData = new byte[1280 * 720 * 3 / 2];
+
+    public static VideoEncode getInstance() {
         return VideoStreamHolder.sInstance;
     }
 
     private static class VideoStreamHolder {
-        public static final MediaEncoder sInstance = new MediaEncoder();
+        public static final VideoEncode sInstance = new VideoEncode();
     }
 
     public void start() {
@@ -66,6 +70,29 @@ public class MediaEncoder implements Runnable {
         }
         isRunning.set(true);
         while (!isStop.get()) {
+            boolean flag = false;
+            synchronized (mLock) {
+                if (yuvBuffer.position() > sendData.length) {
+                    flag = true;
+                    yuvBuffer.flip();
+                    yuvBuffer.get(sendData);
+                    yuvBuffer.compact();
+                }
+            }
+            if (flag) {
+                int inputBufferIndex = mediaCodec.dequeueInputBuffer(-1);
+                ByteBuffer inputBuffer = mediaCodec.getInputBuffer(inputBufferIndex);
+                if (inputBuffer == null) {
+                    FlyLog.e("getInputBuffer failed!");
+                    return;
+                }
+                inputBuffer.clear();
+                inputBuffer.put(sendData);
+                if (firstTime == 0) {
+                    firstTime = SystemClock.uptimeMillis() * 1000;
+                }
+                mediaCodec.queueInputBuffer(inputBufferIndex, 0, sendData.length, SystemClock.uptimeMillis()*1000-firstTime, 0);
+            }
             int outputIndex = mediaCodec.dequeueOutputBuffer(mOutBufferInfo, TIMEOUT_US);
             switch (outputIndex) {
                 case MediaCodec.INFO_TRY_AGAIN_LATER:
@@ -111,28 +138,32 @@ public class MediaEncoder implements Runnable {
 
     }
 
+    long firstTime = 0;
+
     public void pushyuvdata(byte[] yy, byte[] uu, byte[] vv) {
-        int inputBufferIndex = mediaCodec.dequeueInputBuffer(-1);
-        ByteBuffer inputBuffer = mediaCodec.getInputBuffer(inputBufferIndex);
-        if (inputBuffer == null) {
-            FlyLog.e("getInputBuffer failed!");
-            return;
-        }
-        inputBuffer.clear();
-        int length = yy.length + uu.length / 2 + vv.length / 2;
-        if (yy.length / uu.length == 2) {
-            ((ByteBuffer) inputBuffer).put(yy, 0, yy.length);
-            int uIndex = 0, vIndex = 0;
-            for (int i = yy.length; i < length; i += 2) {
-                ((ByteBuffer) inputBuffer).put(uu[uIndex]);
-                uIndex += 2;
+        synchronized (mLock) {
+            if (yuvBuffer.remaining() < ((int) yy.length * 1.5)) {
+                FlyLog.e("buffer is full");
+                //yuvBuffer.clear();
+            } else {
+                int length = yy.length + uu.length / 2 + vv.length / 2;
+                if (yy.length / uu.length == 2) {
+                    ((ByteBuffer) yuvBuffer).put(yy, 0, yy.length);
+                    int uIndex = 0, vIndex = 0;
+                    for (int i = yy.length; i < length; i += 2) {
+                        ((ByteBuffer) yuvBuffer).put(uu[uIndex]);
+                        ((ByteBuffer) yuvBuffer).put(vv[uIndex]);
+                        uIndex += 2;
+                    }
+                    ((ByteBuffer) yuvBuffer).put(uu[uu.length-1]);
+//                    for (int i = yy.length; i < length; i += 2) {
+//                        ((ByteBuffer) yuvBuffer).put(vv[vIndex]);
+//                        vIndex += 2;
+//                    }
+                    ((ByteBuffer) yuvBuffer).put(vv[vv.length-1]);
+                }
             }
-            for (int i = yy.length; i < length; i += 2) {
-                ((ByteBuffer) inputBuffer).put(vv[vIndex]);
-                vIndex += 2;
-            }
         }
-        mediaCodec.queueInputBuffer(inputBufferIndex, 0, length, SystemClock.uptimeMillis(), 0);
     }
 
     public void stop() {

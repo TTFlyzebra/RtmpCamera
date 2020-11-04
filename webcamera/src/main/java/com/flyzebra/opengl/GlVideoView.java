@@ -5,6 +5,8 @@ import android.opengl.GLSurfaceView;
 import android.util.AttributeSet;
 import android.view.SurfaceHolder;
 
+import com.flyzebra.rtmp.FlvRtmpClient;
+
 
 /**
  * Author: FlyZebra
@@ -26,7 +28,7 @@ public class GlVideoView extends GLSurfaceView implements SurfaceHolder.Callback
     private void init(Context context) {
         setEGLContextClientVersion(2);
         glRender = new GlRender(context);
-        glRender.setSize(640,360);
+        glRender.setSize(FlvRtmpClient.VIDEO_WIDTH,FlvRtmpClient.VIDEO_HEIGHT);
         setRenderer(glRender);
         setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
         getHolder().addCallback(this);
