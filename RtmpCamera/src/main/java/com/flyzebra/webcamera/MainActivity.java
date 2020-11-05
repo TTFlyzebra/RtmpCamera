@@ -16,6 +16,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.util.Range;
 import android.util.Size;
 import android.view.Surface;
 import android.view.TextureView;
@@ -30,6 +31,7 @@ import androidx.core.app.ActivityCompat;
 import com.flyzebra.media.AudioStream;
 import com.flyzebra.media.VideoStream;
 import com.flyzebra.rtmp.FlvRtmpClient;
+import com.flyzebra.utils.CameraUtils;
 import com.flyzebra.utils.FlyLog;
 import com.flyzebra.utils.SPUtil;
 
@@ -209,6 +211,8 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
                 mPreviewRequestBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
                 mPreviewRequestBuilder.set(CaptureRequest.JPEG_THUMBNAIL_SIZE, new Size(FlvRtmpClient.VIDEO_WIDTH, FlvRtmpClient.VIDEO_HEIGHT));
+                Range<Integer>[]  fpsRanges =  CameraUtils.getCameraFps(MainActivity.this);
+                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, fpsRanges[0]);
                 mPreviewRequestBuilder.addTarget(surface);
                 mPreviewRequestBuilder.addTarget(mImageReader.getSurface());
                 mCameraDevice.createCaptureSession(Arrays.asList(surface, mImageReader.getSurface()), mCaptureStateCallback, mBackgroundHandler);

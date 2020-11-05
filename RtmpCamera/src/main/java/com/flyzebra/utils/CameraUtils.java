@@ -6,7 +6,10 @@ import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.util.Range;
 import android.util.Size;
+
+import java.util.Arrays;
 
 public class CameraUtils {
 
@@ -16,6 +19,8 @@ public class CameraUtils {
             CameraManager mCameraManager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
             for (final String cameraId : mCameraManager.getCameraIdList()) {
                 CameraCharacteristics cameraCharacteristics = mCameraManager.getCameraCharacteristics(cameraId);
+
+                Range<Integer>[] fpsRanges = cameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES);
                 StreamConfigurationMap streamConfigurationMap = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
                 Size[] sizes = streamConfigurationMap.getOutputSizes(ImageFormat.JPEG);
                 for (int i = 0; i < sizes.length; i++) { //遍历所有Size
@@ -41,5 +46,20 @@ public class CameraUtils {
             e.printStackTrace();
         }
         return findSize;
+    }
+
+    public static Range<Integer>[] getCameraFps(Context context) {
+        Range<Integer>[] fpsRanges = null;
+        try {
+            CameraManager mCameraManager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
+            for (final String cameraId : mCameraManager.getCameraIdList()) {
+                CameraCharacteristics cameraCharacteristics = mCameraManager.getCameraCharacteristics(cameraId);
+                fpsRanges = cameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES);
+                FlyLog.e("SYNC_MAX_LATENCY_PER_FRAME_CONTROL: " + Arrays.toString(fpsRanges));
+            }
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+        return fpsRanges;
     }
 }
