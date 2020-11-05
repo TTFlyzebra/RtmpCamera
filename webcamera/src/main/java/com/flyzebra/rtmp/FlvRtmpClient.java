@@ -36,7 +36,6 @@ public class FlvRtmpClient {
 
     private static final Object lock = new Object();
     private AtomicLong jniRtmpPointer = new AtomicLong(-1);
-    public static final String RTMP_ADDR = "rtmp://192.168.8.244/live/xxxx";
 
     public static FlvRtmpClient getInstance() {
         return FlvRtmpClient.RtmpSendTaskHolder.sInstance;
@@ -49,21 +48,25 @@ public class FlvRtmpClient {
     private void sendData(byte[] data, int type, int ts) {
         int ret = 0;
         synchronized (lock) {
-            ret = RtmpClient.write(jniRtmpPointer.get(), data, data.length, type, ts);
+            if (jniRtmpPointer.get() != -1) {
+                ret = RtmpClient.write(jniRtmpPointer.get(), data, data.length, type, ts);
+            }
         }
         if (data[0] == (byte) 0x17) {
-            FlyLog.d("rtmp send:%s[%d]", ByteUtil.bytes2String(data, 16),data.length);
+            FlyLog.d("rtmp send:%s[%d][ok]", ByteUtil.bytes2String(data, 16), data.length);
         }
         if (ret != 0) {
-            FlyLog.e("rtmp send error!");
+            FlyLog.e("rtmp send:%s[%d][errer]", ByteUtil.bytes2String(data, 16), data.length);
         }
     }
 
     public void open(final String url) {
-        if (jniRtmpPointer.get() == -1) {
-            jniRtmpPointer.set(RtmpClient.open(url, true));
-            sendMetaData();
+        synchronized (lock) {
+            if (jniRtmpPointer.get() == -1) {
+                jniRtmpPointer.set(RtmpClient.open(url, true));
+            }
         }
+        sendMetaData();
     }
 
     public void sendMetaData() {
@@ -153,9 +156,11 @@ public class FlvRtmpClient {
     }
 
     public void close() {
-        if (jniRtmpPointer.get() == -1) return;
-        RtmpClient.close(jniRtmpPointer.get());
-        jniRtmpPointer.set(-1);
+        synchronized (lock) {
+            if (jniRtmpPointer.get() == -1) return;
+            RtmpClient.close(jniRtmpPointer.get());
+            jniRtmpPointer.set(-1);
+        }
     }
 
 }

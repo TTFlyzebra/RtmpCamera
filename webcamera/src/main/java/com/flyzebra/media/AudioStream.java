@@ -26,8 +26,9 @@ import static android.content.ContentValues.TAG;
  * Describ:
  **/
 public class AudioStream {
+    private String rtmpURL;
     private static final long WAIT_TIME = 5000;//1ms;
-    private AtomicBoolean isQuit = new AtomicBoolean(false);
+    private AtomicBoolean isStop = new AtomicBoolean(false);
     private AudioRecord mAudioRecord;
     private int recordBufSize = 0; // 声明recoordBufffer的大小字段
     private byte[] audioBuffer;
@@ -52,6 +53,9 @@ public class AudioStream {
     private static final Handler sHandler = new Handler(tWorkerThread.getLooper());
     private int startTime;
 
+    private AtomicBoolean isRunning1 = new AtomicBoolean(false);
+    private AtomicBoolean isRunning2 = new AtomicBoolean(false);
+
     public static AudioStream getInstance() {
         return AudioStreamHolder.sInstance;
     }
@@ -64,7 +68,8 @@ public class AudioStream {
         @Override
         public void run() {
             FlyLog.d("record audio task start!");
-            while (!isQuit.get()) {
+            isRunning1.set(true);
+            while (!isStop.get()) {
                 int size = mAudioRecord.read(audioBuffer, 0, audioBuffer.length);
                 if (size > 0) {
                     long nowTimeMs = SystemClock.uptimeMillis();
@@ -77,7 +82,6 @@ public class AudioStream {
                     } else {
                         FlyLog.d("dstAudioEncoder.dequeueInputBuffer(-1)<0");
                     }
-                    FlyLog.d("AudioFilterHandler,ProcessTime:" + (System.currentTimeMillis() - nowTimeMs));
                 }
             }
             mAudioRecord.stop();
@@ -86,6 +90,7 @@ public class AudioStream {
             mAudioEncoder.stop();
             mAudioEncoder.release();
             mAudioEncoder = null;
+            isRunning1.set(false);
             FlyLog.d("record audio task end!");
         }
     };
@@ -94,8 +99,9 @@ public class AudioStream {
         @Override
         public void run() {
             FlyLog.d("send audio task start!");
-            while (!isQuit.get()) {
-                FlvRtmpClient.getInstance().open(FlvRtmpClient.RTMP_ADDR);
+            isRunning2.set(true);
+            while (!isStop.get()) {
+                FlvRtmpClient.getInstance().open(rtmpURL);
                 int ouputIndex = mAudioEncoder.dequeueOutputBuffer(mBufferInfo, WAIT_TIME);
                 switch (ouputIndex) {
                     case MediaCodec.INFO_TRY_AGAIN_LATER:
@@ -120,6 +126,7 @@ public class AudioStream {
                         break;
                 }
             }
+            isRunning2.set(false);
             FlyLog.d("send audio task end!");
         }
     };
@@ -133,8 +140,18 @@ public class AudioStream {
     }
 
 
-    public void start() {
-        isQuit.set(false);
+    public void start(String url) {
+        while (isRunning1.get()||isRunning2.get()) {
+            isStop.set(false);
+            try {
+                FlyLog.e("Thread is running!");
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        rtmpURL = url;
+        isStop.set(false);
         initAudioEncoder();
         initAudioRecord();
         tHandler.post(runPutTask);
@@ -171,9 +188,17 @@ public class AudioStream {
 
 
     public void stop() {
-        isQuit.set(true);
         tHandler.removeCallbacksAndMessages(null);
         sHandler.removeCallbacksAndMessages(null);
+        isStop.set(true);
+        while (!isRunning1.get()||!isRunning2.get()){
+            try {
+                FlyLog.e("Thread don't exit!");
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 }

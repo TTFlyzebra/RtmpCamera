@@ -20,6 +20,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Describ:
  **/
 public class VideoStream implements Runnable {
+    private String rtmpURL;
     private MediaCodec mediaCodec;
 
     // parameters for the encoder
@@ -55,7 +56,15 @@ public class VideoStream implements Runnable {
         public static final VideoStream sInstance = new VideoStream();
     }
 
-    public void start() {
+    public void start(String url) {
+        while (isRunning.get()) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        rtmpURL = url;
         isStop.set(false);
         initMediaCodec();
         tHandler.post(this);
@@ -64,15 +73,8 @@ public class VideoStream implements Runnable {
     @Override
     public void run() {
         FlyLog.d("send video task start!");
-        while (isRunning.get()) {
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
         isRunning.set(true);
-        FlvRtmpClient.getInstance().open(FlvRtmpClient.RTMP_ADDR);
+        FlvRtmpClient.getInstance().open(rtmpURL);
         while (!isStop.get()) {
             boolean flag = false;
             synchronized (mLock) {
@@ -174,6 +176,14 @@ public class VideoStream implements Runnable {
     public void stop() {
         tHandler.removeCallbacksAndMessages(null);
         isStop.set(true);
+        while (!isRunning.get()){
+            try {
+                FlyLog.e("Thread don't exit!");
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 }
