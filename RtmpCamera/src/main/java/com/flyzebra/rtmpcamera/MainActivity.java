@@ -132,6 +132,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surfaceTexture) {
         FlyLog.d("onSurfaceTextureDestroyed");
         closeCamera();
+        System.exit(0);
         return false;
     }
 
@@ -193,7 +194,6 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
             mImageReader.close();
             mImageReader = null;
         }
-        System.exit(0);
     }
 
     public void switchCamera(View view) {
