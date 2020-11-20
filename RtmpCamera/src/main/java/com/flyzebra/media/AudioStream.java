@@ -73,14 +73,14 @@ public class AudioStream {
                 int size = mAudioRecord.read(audioBuffer, 0, audioBuffer.length);
                 if (size > 0) {
                     long nowTimeMs = SystemClock.uptimeMillis();
-                    int eibIndex = mAudioEncoder.dequeueInputBuffer(-1);
+                    int eibIndex = mAudioEncoder.dequeueInputBuffer(20000);
                     if (eibIndex >= 0) {
                         ByteBuffer dstAudioEncoderIBuffer = mAudioEncoder.getInputBuffers()[eibIndex];
                         dstAudioEncoderIBuffer.position(0);
                         dstAudioEncoderIBuffer.put(audioBuffer, 0, audioBuffer.length);
                         mAudioEncoder.queueInputBuffer(eibIndex, 0, audioBuffer.length, nowTimeMs * 1000, 0);
                     } else {
-                        FlyLog.d("dstAudioEncoder.dequeueInputBuffer(-1)<0");
+                        //FlyLog.d("dstAudioEncoder.dequeueInputBuffer(-1)<0");
                     }
                 }
             }

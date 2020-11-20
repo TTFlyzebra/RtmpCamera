@@ -150,7 +150,7 @@ public class VideoStream implements Runnable {
     public void pushyuvdata(byte[] yy, byte[] uu, byte[] vv) {
         synchronized (mLock) {
             if (yuvBuffer.remaining() < ((int) yy.length * 1.5)) {
-                FlyLog.e("buffer is full");
+                //FlyLog.e("buffer is full");
                 //yuvBuffer.clear();
             } else {
                 int length = yy.length + uu.length / 2 + vv.length / 2;

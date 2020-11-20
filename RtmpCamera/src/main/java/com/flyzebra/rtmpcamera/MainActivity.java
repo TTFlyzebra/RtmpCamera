@@ -73,8 +73,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
-                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON, WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_main);
 
         mCameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
@@ -118,6 +117,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int i, int i1) {
+        FlyLog.d("onSurfaceTextureAvailable");
         if(isPermission){
             openCamera();
         }
@@ -130,6 +130,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
 
     @Override
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surfaceTexture) {
+        FlyLog.d("onSurfaceTextureDestroyed");
         closeCamera();
         return false;
     }
@@ -154,6 +155,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     }
 
     private void openCamera() {
+        FlyLog.d("openCamera");
         String url = et_rtmpurl.getText().toString();
         if(url.startsWith("rtmp://")){
             SPUtil.set(this,"RTMP_URL",url);
@@ -171,6 +173,8 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
             } catch (CameraAccessException e) {
                 FlyLog.e(e.toString());
             }
+        }else{
+            FlyLog.e("no camera permission");
         }
     }
 
@@ -189,6 +193,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
             mImageReader.close();
             mImageReader = null;
         }
+        System.exit(0);
     }
 
     public void switchCamera(View view) {
