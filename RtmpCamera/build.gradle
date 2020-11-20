@@ -22,7 +22,7 @@ android {
     buildToolsVersion "30.0.0"
 
     defaultConfig {
-        applicationId "com.flyzebra.webcamera"
+        applicationId "com.flyzebra.rtmpcamera"
         minSdkVersion 22
         targetSdkVersion 28
         versionCode gitCommitCount.toInteger()

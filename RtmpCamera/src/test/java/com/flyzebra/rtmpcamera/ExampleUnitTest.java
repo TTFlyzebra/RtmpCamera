@@ -1,4 +1,4 @@
-package com.flyzebra.webcamera;
+package com.flyzebra.rtmpcamera;
 
 import org.junit.Test;
 

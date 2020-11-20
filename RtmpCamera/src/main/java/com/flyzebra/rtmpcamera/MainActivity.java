@@ -1,4 +1,4 @@
-package com.flyzebra.webcamera;
+package com.flyzebra.rtmpcamera;
 
 import android.Manifest;
 import android.content.Context;

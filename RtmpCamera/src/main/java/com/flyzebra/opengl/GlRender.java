@@ -6,7 +6,7 @@ import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 
 import com.flyzebra.utils.FlyLog;
-import com.flyzebra.webcamera.R;
+import com.flyzebra.rtmpcamera.R;
 
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
