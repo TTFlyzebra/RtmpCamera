@@ -1,3 +1,4 @@
+include ':yuvlib'
 include ':rtmplib'
 include ':RtmpCamera'
 rootProject.name = "RtmpCamera"
