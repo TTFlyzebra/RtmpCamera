@@ -6,18 +6,20 @@ include_directories(src/main/cpp/include)
 add_library(
         flylibyuv
         SHARED
-        src/main/cpp/FlyLibYUV.cpp
-)
+        src/main/cpp/FlyLibYUV.cpp)
 
 #添加libavcodec-57.so
 add_library(libyuv
         STATIC
         IMPORTED)
+
 set_target_properties(libyuv
         PROPERTIES IMPORTED_LOCATION
-        ${CMAKE_SOURCE_DIR}/src/main/jniLibs/${ANDROID_ABI}/libavcodec-57.so)
+        ${CMAKE_SOURCE_DIR}/src/main/jniLibs/${ANDROID_ABI}/libyuv.a)
 
 target_link_libraries( # Specifies the target library.
         flylibyuv
         libyuv
+        android
+        log
         )

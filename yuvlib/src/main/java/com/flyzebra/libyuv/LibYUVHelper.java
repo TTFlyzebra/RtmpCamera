@@ -7,7 +7,7 @@ package com.flyzebra.libyuv;
 public class LibYUVHelper {
 
     static {
-        System.loadLibrary("libyuv");
+        System.loadLibrary("flylibyuv");
     }
 
     static public native void NV21TOYUV420P(byte[] src, byte[]y, byte[] uv, byte[] dst, int widht, int height);

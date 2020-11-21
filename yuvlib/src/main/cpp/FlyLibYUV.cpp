@@ -4,6 +4,7 @@
 
 #include "jni.h"
 #include "FlyLog.h"
+#include "libyuv.h"
 
 JavaVM* javaVM = nullptr;
 
