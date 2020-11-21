@@ -12,22 +12,35 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:background="#FFF"
-        android:gravity="center"/>
+        android:gravity="center" />
 
     <RelativeLayout
         android:id="@+id/rl01"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center">
-        <!--        <com.flyzebra.opengl.GlVideoView-->
-        <!--            android:id="@+id/ac_main_gl"-->
-        <!--            android:layout_width="960px"-->
-        <!--            android:layout_height="540px" />-->
 
-        <TextureView
-            android:id="@+id/ac_main_tuv"
-            android:layout_width="1080px"
-            android:layout_height="1920px" />
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center">
+
+            <TextureView
+                android:id="@+id/ac_main_tuv"
+                android:layout_width="720px"
+                android:layout_height="1280px" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center">
+
+            <com.flyzebra.opengl.GlVideoView
+                android:id="@+id/ac_main_gl"
+                android:layout_width="960px"
+                android:layout_height="540px" />
+        </RelativeLayout>
 
     </RelativeLayout>
 

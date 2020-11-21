@@ -30,6 +30,7 @@ import androidx.core.app.ActivityCompat;
 
 import com.flyzebra.media.AudioStream;
 import com.flyzebra.media.VideoStream;
+import com.flyzebra.opengl.GlVideoView;
 import com.flyzebra.rtmp.FlvRtmpClient;
 import com.flyzebra.utils.CameraUtils;
 import com.flyzebra.utils.FlyLog;
@@ -60,7 +61,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
 
     private TextureView mTextureView;
     private EditText et_rtmpurl;
-//    private GlVideoView glVideoView;
+    private GlVideoView glVideoView;
 
     private static final HandlerThread mThread = new HandlerThread("bgHandler");
 
@@ -91,7 +92,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
             isPermission = true;
         }
         FlyLog.d("isPermission="+isPermission);
-//        glVideoView = findViewById(R.id.ac_main_gl);
+        glVideoView = findViewById(R.id.ac_main_gl);
     }
 
     @Override
@@ -282,8 +283,8 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
                     planes[2].getBuffer().get(v);
                 }
                 lock.unlock();
-//                FlyLog.d("widht=%d, height=%d, yL=%d, uL=%d, vL=%d",image.getWidth(),image.getHeight(),y.length,u.length,v.length);
-//                glVideoView.pushyuvdata(y,u,v);
+                FlyLog.d("widht=%d, height=%d, yL=%d, uL=%d, vL=%d",image.getWidth(),image.getHeight(),y.length,u.length,v.length);
+                glVideoView.pushyuvdata(y,u,v);
                 VideoStream.getInstance().pushyuvdata(y, u, v);
             }
             image.close();
