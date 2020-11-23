@@ -82,16 +82,16 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
         mTextureView.setSurfaceTextureListener(this);
 
         et_rtmpurl = findViewById(R.id.et_rtmpurl);
-        et_rtmpurl.setText((String)SPUtil.get(this,"RTMP_URL","rtmp://192.168.1.88/live/flycam"));
+        et_rtmpurl.setText((String) SPUtil.get(this, "RTMP_URL", "rtmp://192.168.1.88/live/flycam"));
 
-        cameraID = (String) SPUtil.get(this,"CAMERAID","0");
+        cameraID = (String) SPUtil.get(this, "CAMERAID", "0");
 
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
             verifyPermissions();
         } else {
             isPermission = true;
         }
-        FlyLog.d("isPermission="+isPermission);
+        FlyLog.d("isPermission=" + isPermission);
         glVideoView = findViewById(R.id.ac_main_gl);
     }
 
@@ -108,7 +108,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
             }
             if (authorized) {
                 isPermission = true;
-                if(isSurfaceReady){
+                if (isSurfaceReady) {
                     openCamera();
                 }
             }
@@ -119,7 +119,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int i, int i1) {
         FlyLog.d("onSurfaceTextureAvailable");
-        if(isPermission){
+        if (isPermission) {
             openCamera();
         }
     }
@@ -159,10 +159,10 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     private void openCamera() {
         FlyLog.d("openCamera");
         String url = et_rtmpurl.getText().toString();
-        if(url.startsWith("rtmp://")){
-            SPUtil.set(this,"RTMP_URL",url);
-        }else{
-            Toast.makeText(this,"rtmp url is error!",Toast.LENGTH_SHORT).show();
+        if (url.startsWith("rtmp://")) {
+            SPUtil.set(this, "RTMP_URL", url);
+        } else {
+            Toast.makeText(this, "rtmp url is error!", Toast.LENGTH_SHORT).show();
             return;
         }
         if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
@@ -175,7 +175,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
             } catch (CameraAccessException e) {
                 FlyLog.e(e.toString());
             }
-        }else{
+        } else {
             FlyLog.e("no camera permission");
         }
     }
@@ -200,7 +200,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     public void switchCamera(View view) {
         closeCamera();
         cameraID = cameraID.equals("0") ? "1" : "0";
-        SPUtil.set(this,"CAMERAID",cameraID);
+        SPUtil.set(this, "CAMERAID", cameraID);
         openCamera();
     }
 
@@ -217,7 +217,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
                 mPreviewRequestBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
                 mPreviewRequestBuilder.set(CaptureRequest.JPEG_THUMBNAIL_SIZE, new Size(FlvRtmpClient.VIDEO_WIDTH, FlvRtmpClient.VIDEO_HEIGHT));
-                Range<Integer>[]  fpsRanges =  CameraUtils.getCameraFps(MainActivity.this);
+                Range<Integer>[] fpsRanges = CameraUtils.getCameraFps(MainActivity.this);
                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, fpsRanges[0]);
                 mPreviewRequestBuilder.addTarget(surface);
                 mPreviewRequestBuilder.addTarget(mImageReader.getSurface());
@@ -290,5 +290,42 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
             image.close();
         }
     }
+
+//    private class OnImageAvailableListenerImpl implements ImageReader.OnImageAvailableListener {
+//        private byte[] i422_yuv;
+//        private byte[] i420_yuv;
+//        private final ReentrantLock lock = new ReentrantLock();
+
+//        @Override
+//        public void onImageAvailable(ImageReader reader) {
+//            Image image = reader.acquireNextImage();
+//            if (image.getFormat() == ImageFormat.YUV_420_888) {
+//                Image.Plane[] planes = image.getPlanes();
+//                lock.lock();
+//                try {
+//                    int y = planes[0].getBuffer().limit() - planes[0].getBuffer().position();
+//                    int u = planes[1].getBuffer().limit() - planes[1].getBuffer().position();
+//                    int v = planes[2].getBuffer().limit() - planes[2].getBuffer().position();
+//                    FlyLog.d("widht=%d, height=%d, yL=%d, uL=%d, vL=%d",image.getWidth(),image.getHeight(),y,u,v);
+//                    if (i422_yuv == null) {
+//                        i422_yuv = new byte[y + u + v];
+//                    }
+//                    if (i420_yuv == null) {
+//                        i420_yuv = new byte[y + y / 2];
+//                    }
+//                    planes[0].getBuffer().get(i422_yuv, 0, y);
+//                    planes[1].getBuffer().get(i422_yuv, y, u);
+//                    planes[2].getBuffer().get(i422_yuv, u, v);
+//                    LibYuvTools.I422ToI420(i422_yuv, i420_yuv, image.getWidth(), image.getHeight());
+//                } catch (Exception e) {
+//                    FlyLog.e(e.toString());
+//                }
+//                lock.unlock();
+//                glVideoView.pushyuvdata(i420_yuv, image.getWidth(), image.getHeight());
+//                VideoStream.getInstance().pushyuvdata(i420_yuv, image.getWidth(), image.getHeight());
+//            }
+//            image.close();
+//        }
+//    }
 
 }

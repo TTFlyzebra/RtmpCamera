@@ -55,4 +55,10 @@ public class GlVideoView extends GLSurfaceView implements SurfaceHolder.Callback
         requestRender();
     }
 
+
+    public void pushyuvdata(byte[] yuv,int width, int height) {
+        glRender.pushyuvdata(yuv,width,height);
+        requestRender();
+    }
+
 }

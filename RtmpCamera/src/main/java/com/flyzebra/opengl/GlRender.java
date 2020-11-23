@@ -5,8 +5,8 @@ import android.graphics.SurfaceTexture;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 
-import com.flyzebra.utils.FlyLog;
 import com.flyzebra.rtmpcamera.R;
+import com.flyzebra.utils.FlyLog;
 
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
@@ -87,31 +87,40 @@ public class GlRender implements GLSurfaceView.Renderer, SurfaceTexture.OnFrameA
         synchronized (objectLock) {
 
             //YUV422 TO YUV420
-            if(yy.length/uu.length==2) {
+            if (yy.length / uu.length == 2) {
                 ((ByteBuffer) y).put(yy, 0, yy.length);
                 int length = yy.length + uu.length / 2 + vv.length / 2;
-                int uIndex = 0, vIndex = 0;
+                int index = 0;
                 for (int i = yy.length; i < length; i += 2) {
-                    ((ByteBuffer) u).put(uu[uIndex]);
-                    ((ByteBuffer) v).put(vv[vIndex]);
-                    vIndex += 2;
-                    uIndex += 2;
+                    ((ByteBuffer) u).put(uu[index]);
+                    ((ByteBuffer) v).put(vv[index]);
+                    index += 2;
                 }
-            }
-            else {
-                ((ByteBuffer) y).put(yy,0,1280*720);
+            } else {
+                ((ByteBuffer) y).put(yy, 0, 1280 * 720);
                 //((ByteBuffer) u).put(uu,0,1280*720/4);
                 //((ByteBuffer) v).put(vv,0,1280*720/4);
                 for (int i = 0; i < w * h / 4; i++) {
-                    if(i%2==0){
+                    if (i % 2 == 0) {
                         ((ByteBuffer) u).put(vv[i]);
                         ((ByteBuffer) v).put(uu[i]);
-                    }else{
+                    } else {
                         ((ByteBuffer) u).put(uu[i]);
                         ((ByteBuffer) v).put(vv[i]);
                     }
                 }
             }
+            y.flip();
+            u.flip();
+            v.flip();
+        }
+    }
+
+    public void pushyuvdata(byte[] yuv, int width, int height) {
+        synchronized (objectLock) {
+            ((ByteBuffer) y).put(yuv, 0, width * height);
+            ((ByteBuffer) u).put(yuv, width * height, width * height / 4);
+            ((ByteBuffer) v).put(yuv, width * height + width * height / 4, width * height / 4);
             y.flip();
             u.flip();
             v.flip();

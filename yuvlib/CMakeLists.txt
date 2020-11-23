@@ -6,9 +6,8 @@ include_directories(src/main/cpp/include)
 add_library(
         flylibyuv
         SHARED
-        src/main/cpp/FlyLibYUV.cpp)
+        src/main/cpp/flylibyuv.cpp)
 
-#添加libavcodec-57.so
 add_library(libyuv
         STATIC
         IMPORTED)

@@ -25,7 +25,7 @@ public class VideoStream implements Runnable {
 
     // parameters for the encoder
     private static final String MIME_TYPE = "video/avc"; // H.264 Advanced Video Coding
-    private static final int TIMEOUT_US = 10000;
+    private static final int TIMEOUT_US = 100000;
 
     private AtomicBoolean isStop = new AtomicBoolean(true);
     private AtomicBoolean isRunning = new AtomicBoolean(false);
@@ -156,11 +156,11 @@ public class VideoStream implements Runnable {
                 int length = yy.length + uu.length / 2 + vv.length / 2;
                 if (yy.length / uu.length == 2) {
                     ((ByteBuffer) yuvBuffer).put(yy, 0, yy.length);
-                    int uIndex = 0, vIndex = 0;
+                    int index = 0;
                     for (int i = yy.length; i < length; i += 2) {
-                        ((ByteBuffer) yuvBuffer).put(uu[uIndex]);
-                        ((ByteBuffer) yuvBuffer).put(vv[uIndex]);
-                        uIndex += 2;
+                        ((ByteBuffer) yuvBuffer).put(uu[index]);
+                        ((ByteBuffer) yuvBuffer).put(vv[index]);
+                        index += 2;
                     }
                     ((ByteBuffer) yuvBuffer).put(uu[uu.length-1]);
 //                    for (int i = yy.length; i < length; i += 2) {
@@ -169,6 +169,16 @@ public class VideoStream implements Runnable {
 //                    }
                     ((ByteBuffer) yuvBuffer).put(vv[vv.length-1]);
                 }
+            }
+        }
+    }
+
+    public void pushyuvdata(byte[] yuv, int width, int height) {
+        synchronized (mLock) {
+            try {
+                ((ByteBuffer) yuvBuffer).put(yuv);
+            }catch (Exception e){
+                FlyLog.e(e.toString());
             }
         }
     }
