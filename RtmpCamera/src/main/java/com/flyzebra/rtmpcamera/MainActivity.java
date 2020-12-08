@@ -30,7 +30,6 @@ import androidx.core.app.ActivityCompat;
 
 import com.flyzebra.media.AudioStream;
 import com.flyzebra.media.VideoStream;
-import com.flyzebra.opengl.GlVideoView;
 import com.flyzebra.rtmp.FlvRtmpClient;
 import com.flyzebra.utils.CameraUtils;
 import com.flyzebra.utils.FlyLog;
@@ -61,7 +60,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
 
     private TextureView mTextureView;
     private EditText et_rtmpurl;
-    private GlVideoView glVideoView;
+//    private GlVideoView glVideoView;
 
     private static final HandlerThread mThread = new HandlerThread("bgHandler");
 
@@ -92,7 +91,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
             isPermission = true;
         }
         FlyLog.d("isPermission=" + isPermission);
-        glVideoView = findViewById(R.id.ac_main_gl);
+//        glVideoView = findViewById(R.id.ac_main_gl);
     }
 
     @Override
@@ -261,9 +260,10 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     };
 
     private class OnImageAvailableListenerImpl implements ImageReader.OnImageAvailableListener {
-        private byte[] y;
-        private byte[] u;
-        private byte[] v;
+        private byte yuv[] = new byte[1280*720*2];
+        private byte[] yy = new byte[1280*720];
+        private byte[] uu= new byte[1280*720/2];
+        private byte[] vv= new byte[1280*720/2];
         private ReentrantLock lock = new ReentrantLock();
 
         @Override
@@ -272,20 +272,29 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
             if (image.getFormat() == ImageFormat.YUV_420_888) {
                 Image.Plane[] planes = image.getPlanes();
                 lock.lock();
-                if (y == null) {
-                    y = new byte[planes[0].getBuffer().limit() - planes[0].getBuffer().position()];
-                    u = new byte[planes[1].getBuffer().limit() - planes[1].getBuffer().position()];
-                    v = new byte[planes[2].getBuffer().limit() - planes[2].getBuffer().position()];
-                }
-                if (image.getPlanes()[0].getBuffer().remaining() == y.length) {
-                    planes[0].getBuffer().get(y);
-                    planes[1].getBuffer().get(u);
-                    planes[2].getBuffer().get(v);
+//                if (y == null) {
+//                    y = new byte[planes[0].getBuffer().limit() - planes[0].getBuffer().position()];
+//                    u = new byte[planes[1].getBuffer().limit() - planes[1].getBuffer().position()];
+//                    v = new byte[planes[2].getBuffer().limit() - planes[2].getBuffer().position()];
+//                }
+//                if (image.getPlanes()[0].getBuffer().remaining() == y.length) {
+//                    planes[0].getBuffer().get(y);
+//                    planes[1].getBuffer().get(u);
+//                    planes[2].getBuffer().get(v);
+//                }
+                int yL = planes[0].getBuffer().limit() - planes[0].getBuffer().position();
+                int uL = planes[1].getBuffer().limit() - planes[1].getBuffer().position();
+                int vL = planes[2].getBuffer().limit() - planes[2].getBuffer().position();
+                if (image.getPlanes()[0].getBuffer().remaining() == yL) {
+                    planes[0].getBuffer().get(yy,0,yL);
+                    planes[1].getBuffer().get(uu,0,uL);
+                    planes[2].getBuffer().get(vv,0,vL);
                 }
                 lock.unlock();
-                FlyLog.d("widht=%d, height=%d, yL=%d, uL=%d, vL=%d",image.getWidth(),image.getHeight(),y.length,u.length,v.length);
-                glVideoView.pushyuvdata(y,u,v);
-                VideoStream.getInstance().pushyuvdata(y, u, v);
+//                FlyLog.d("widht=%d, height=%d, yL=%d, uL=%d, vL=%d",image.getWidth(),image.getHeight(),y.length,u.length,v.length);
+//                glVideoView.pushyuvdata(y,u,v);
+//                VideoStream.getInstance().pushyuvdata(y, u, v);
+                VideoStream.getInstance().pushyuvdata(yy,uu,vv);
             }
             image.close();
         }

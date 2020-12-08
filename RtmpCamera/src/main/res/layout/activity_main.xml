@@ -27,20 +27,20 @@
 
             <TextureView
                 android:id="@+id/ac_main_tuv"
-                android:layout_width="720px"
-                android:layout_height="1280px" />
+                android:layout_width="1080px"
+                android:layout_height="1920px" />
         </RelativeLayout>
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center">
+<!--        <RelativeLayout-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent"-->
+<!--            android:gravity="center">-->
 
-            <com.flyzebra.opengl.GlVideoView
-                android:id="@+id/ac_main_gl"
-                android:layout_width="960px"
-                android:layout_height="540px" />
-        </RelativeLayout>
+<!--            <com.flyzebra.opengl.GlVideoView-->
+<!--                android:id="@+id/ac_main_gl"-->
+<!--                android:layout_width="960px"-->
+<!--                android:layout_height="540px" />-->
+<!--        </RelativeLayout>-->
 
     </RelativeLayout>
 
