@@ -9,7 +9,6 @@ import android.media.MediaRecorder;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.SystemClock;
-import android.util.Log;
 
 import com.flyzebra.rtmp.FlvRtmpClient;
 import com.flyzebra.utils.FlyLog;
@@ -17,8 +16,6 @@ import com.flyzebra.utils.FlyLog;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import static android.content.ContentValues.TAG;
 
 /**
  * Author FlyZebra
@@ -110,7 +107,7 @@ public class AudioStream {
                         FlvRtmpClient.getInstance().sendAudioSPS(mAudioEncoder.getOutputFormat());
                         break;
                     default:
-                        Log.d(TAG, "AudioSenderThread,MediaCode,eobIndex=" + ouputIndex);
+                        //FlyLog.d("AudioSenderThread,MediaCode,eobIndex=" + ouputIndex);
                         if (startTime == 0) {
                             startTime = (int) (mBufferInfo.presentationTimeUs / 1000);
                         }

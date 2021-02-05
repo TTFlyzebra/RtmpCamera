@@ -93,16 +93,24 @@ public class VideoStream implements Runnable {
                 }
             }
             if (flag) {
-                int length = yy.length + uu.length / 2 + vv.length / 2;
-                ((ByteBuffer) yuvBuffer).put(yy, 0, yy.length);
-                int index = 0;
-                for (int i = yy.length; i < length; i += 2) {
-                    ((ByteBuffer) yuvBuffer).put(uu[index]);
-                    ((ByteBuffer) yuvBuffer).put(vv[index]);
-                    index += 2;
+                if (yy.length / uu.length == 4) {
+                    ((ByteBuffer) yuvBuffer).put(yy, 0, yy.length);
+                    ((ByteBuffer) yuvBuffer).put(uu, 0, uu.length);
+                    ((ByteBuffer) yuvBuffer).put(vv, 0, vv.length);
                 }
-//                ((ByteBuffer) yuvBuffer).put(uu[uu.length - 1]);
-//                ((ByteBuffer) yuvBuffer).put(vv[vv.length - 1]);
+                //I422
+                else if (yy.length / uu.length == 2) {
+                    ((ByteBuffer) yuvBuffer).put(yy, 0, yy.length);
+                    int length = yy.length + uu.length / 2 + vv.length / 2;
+                    int index = 0;
+                    for (int i = yy.length; i < length; i += 2) {
+                        ((ByteBuffer) yuvBuffer).put(uu[index]);
+                        ((ByteBuffer) yuvBuffer).put(vv[index]);
+                        index += 2;
+                    }
+//                    ((ByteBuffer) yuvBuffer).put(uu[uu.length - 1]);
+//                    ((ByteBuffer) yuvBuffer).put(vv[vv.length - 1]);
+                }
 
                 yuvBuffer.flip();
                 yuvBuffer.get(sendData);
@@ -124,9 +132,6 @@ public class VideoStream implements Runnable {
                         FlvRtmpClient.getInstance().sendVideoSPS(mediaCodec.getOutputFormat());
                         break;
                     default:
-//                    if (startTime == 0) {
-//                        startTime = mOutBufferInfo.presentationTimeUs / 1000;
-//                    }
                         if (mOutBufferInfo.flags != MediaCodec.BUFFER_FLAG_CODEC_CONFIG && mOutBufferInfo.size != 0) {
                             ByteBuffer outputBuffer = mediaCodec.getOutputBuffer(outputIndex);
                             outputBuffer.position(mOutBufferInfo.offset);
@@ -180,46 +185,6 @@ public class VideoStream implements Runnable {
                 ((ByteBuffer) recvBuffer).put(yy);
                 ((ByteBuffer) recvBuffer).put(uu);
                 ((ByteBuffer) recvBuffer).put(vv);
-            } catch (Exception e) {
-                FlyLog.e(e.toString());
-            }
-        }
-//        synchronized (mLock) {
-//            if (yuvBuffer.remaining() < ((int) yy.length * 1.5)) {
-//                FlyLog.e("buffer is full");
-//                yuvBuffer.clear();
-//            } else {
-//                int length = yy.length + uu.length / 2 + vv.length / 2;
-//                //I420
-//                if (yy.length / uu.length == 4) {
-//                    ((ByteBuffer) yuvBuffer).put(yy, 0, yy.length);
-//                    ((ByteBuffer) yuvBuffer).put(uu, 0, uu.length);
-//                    ((ByteBuffer) yuvBuffer).put(vv, 0, vv.length);
-//                }
-//                //I422
-//                else if (yy.length / uu.length == 2) {
-//                    ((ByteBuffer) yuvBuffer).put(yy, 0, yy.length);
-//                    int index = 0;
-//                    for (int i = yy.length; i < length; i += 2) {
-//                        ((ByteBuffer) yuvBuffer).put(uu[index]);
-//                        ((ByteBuffer) yuvBuffer).put(vv[index]);
-//                        index += 2;
-//                    }
-//                    ((ByteBuffer) yuvBuffer).put(uu[uu.length - 1]);
-//                    ((ByteBuffer) yuvBuffer).put(vv[vv.length - 1]);
-//                }
-//            }
-//        }
-    }
-
-    public void pushyuvdata(byte[] yuv, int yL, int uvL) {
-        synchronized (mLock) {
-            try {
-                if (recvBuffer.remaining() < ((int) yuv.length)) {
-                    FlyLog.e("buffer is full");
-                    recvBuffer.clear();
-                }
-                ((ByteBuffer) recvBuffer).put(yuv);
             } catch (Exception e) {
                 FlyLog.e(e.toString());
             }

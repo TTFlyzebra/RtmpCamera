@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     private CameraDevice mCameraDevice;
     private CaptureRequest.Builder mPreviewRequestBuilder;
     private ImageReader mImageReader;
-    private String cameraID = "1";
+    private String cameraID = "0";
 
     private TextureView mTextureView;
     private EditText et_rtmpurl;
@@ -69,6 +69,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     }
 
     private Handler mBackgroundHandler = new Handler(mThread.getLooper());
+    private String rtmpUrl;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,7 +82,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
         mTextureView.setSurfaceTextureListener(this);
 
         et_rtmpurl = findViewById(R.id.et_rtmpurl);
-        et_rtmpurl.setText((String) SPUtil.get(this, "RTMP_URL", "rtmp://192.168.1.88/live/flycam"));
+        et_rtmpurl.setText((String) SPUtil.get(this, "RTMP_URL", "rtmp://103.5.126.213/live/flycam"));
 
         cameraID = (String) SPUtil.get(this, "CAMERAID", "0");
 
@@ -157,17 +158,15 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
 
     private void openCamera() {
         FlyLog.d("openCamera");
-        String url = et_rtmpurl.getText().toString();
-        if (url.startsWith("rtmp://")) {
-            SPUtil.set(this, "RTMP_URL", url);
+        rtmpUrl = et_rtmpurl.getText().toString();
+        if (rtmpUrl.startsWith("rtmp://")) {
+            SPUtil.set(this, "RTMP_URL", rtmpUrl);
         } else {
             Toast.makeText(this, "rtmp url is error!", Toast.LENGTH_SHORT).show();
             return;
         }
         if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             try {
-                VideoStream.getInstance().start(url);
-                AudioStream.getInstance().start(url);
                 mImageReader = ImageReader.newInstance(FlvRtmpClient.VIDEO_WIDTH, FlvRtmpClient.VIDEO_HEIGHT, ImageFormat.YUV_420_888, 1);
                 mImageReader.setOnImageAvailableListener(new OnImageAvailableListenerImpl(), mBackgroundHandler);
                 mCameraManager.openCamera(cameraID, deviceCallBack, mBackgroundHandler);
@@ -221,6 +220,8 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
                 mPreviewRequestBuilder.addTarget(surface);
                 mPreviewRequestBuilder.addTarget(mImageReader.getSurface());
                 mCameraDevice.createCaptureSession(Arrays.asList(surface, mImageReader.getSurface()), mCaptureStateCallback, mBackgroundHandler);
+                VideoStream.getInstance().start(rtmpUrl);
+                AudioStream.getInstance().start(rtmpUrl);
             } catch (CameraAccessException e) {
                 FlyLog.e(e.toString());
             }
@@ -272,16 +273,6 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
             if (image.getFormat() == ImageFormat.YUV_420_888) {
                 Image.Plane[] planes = image.getPlanes();
                 lock.lock();
-//                if (y == null) {
-//                    y = new byte[planes[0].getBuffer().limit() - planes[0].getBuffer().position()];
-//                    u = new byte[planes[1].getBuffer().limit() - planes[1].getBuffer().position()];
-//                    v = new byte[planes[2].getBuffer().limit() - planes[2].getBuffer().position()];
-//                }
-//                if (image.getPlanes()[0].getBuffer().remaining() == y.length) {
-//                    planes[0].getBuffer().get(y);
-//                    planes[1].getBuffer().get(u);
-//                    planes[2].getBuffer().get(v);
-//                }
                 int yL = planes[0].getBuffer().limit() - planes[0].getBuffer().position();
                 int uL = planes[1].getBuffer().limit() - planes[1].getBuffer().position();
                 int vL = planes[2].getBuffer().limit() - planes[2].getBuffer().position();
@@ -290,51 +281,12 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
                     planes[1].getBuffer().get(uu,0,uL);
                     planes[2].getBuffer().get(vv,0,vL);
                 }
-                lock.unlock();
 //                FlyLog.d("widht=%d, height=%d, yL=%d, uL=%d, vL=%d",image.getWidth(),image.getHeight(),y.length,u.length,v.length);
-//                glVideoView.pushyuvdata(y,u,v);
-//                VideoStream.getInstance().pushyuvdata(y, u, v);
+//                glVideoView.pushyuvdata(yy,uu,vv);
                 VideoStream.getInstance().pushyuvdata(yy,uu,vv);
+                lock.unlock();
             }
             image.close();
         }
     }
-
-//    private class OnImageAvailableListenerImpl implements ImageReader.OnImageAvailableListener {
-//        private byte[] i422_yuv;
-//        private byte[] i420_yuv;
-//        private final ReentrantLock lock = new ReentrantLock();
-
-//        @Override
-//        public void onImageAvailable(ImageReader reader) {
-//            Image image = reader.acquireNextImage();
-//            if (image.getFormat() == ImageFormat.YUV_420_888) {
-//                Image.Plane[] planes = image.getPlanes();
-//                lock.lock();
-//                try {
-//                    int y = planes[0].getBuffer().limit() - planes[0].getBuffer().position();
-//                    int u = planes[1].getBuffer().limit() - planes[1].getBuffer().position();
-//                    int v = planes[2].getBuffer().limit() - planes[2].getBuffer().position();
-//                    FlyLog.d("widht=%d, height=%d, yL=%d, uL=%d, vL=%d",image.getWidth(),image.getHeight(),y,u,v);
-//                    if (i422_yuv == null) {
-//                        i422_yuv = new byte[y + u + v];
-//                    }
-//                    if (i420_yuv == null) {
-//                        i420_yuv = new byte[y + y / 2];
-//                    }
-//                    planes[0].getBuffer().get(i422_yuv, 0, y);
-//                    planes[1].getBuffer().get(i422_yuv, y, u);
-//                    planes[2].getBuffer().get(i422_yuv, u, v);
-//                    LibYuvTools.I422ToI420(i422_yuv, i420_yuv, image.getWidth(), image.getHeight());
-//                } catch (Exception e) {
-//                    FlyLog.e(e.toString());
-//                }
-//                lock.unlock();
-//                glVideoView.pushyuvdata(i420_yuv, image.getWidth(), image.getHeight());
-//                VideoStream.getInstance().pushyuvdata(i420_yuv, image.getWidth(), image.getHeight());
-//            }
-//            image.close();
-//        }
-//    }
-
 }
