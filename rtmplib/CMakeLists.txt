@@ -51,5 +51,6 @@ find_library(
 target_link_libraries(
         zebra_rtmp
         rtmp
+        z
         ${log-lib}
         )
