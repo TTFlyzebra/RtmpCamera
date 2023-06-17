@@ -6,14 +6,6 @@
     android:background="#000"
     tools:context=".MainActivity">
 
-    <EditText
-        android:id="@+id/et_rtmpurl"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:background="#FFF"
-        android:gravity="center" />
-
     <RelativeLayout
         android:id="@+id/rl01"
         android:layout_width="match_parent"
@@ -31,16 +23,24 @@
                 android:layout_height="1280px" />
         </RelativeLayout>
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center">
+<!--        <RelativeLayout-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent"-->
+<!--            android:gravity="center">-->
 
-            <com.flyzebra.opengl.GlVideoView
-                android:id="@+id/ac_main_gl"
-                android:layout_width="960px"
-                android:layout_height="540px" />
-        </RelativeLayout>
+<!--            <com.flyzebra.opengl.GlVideoView-->
+<!--                android:id="@+id/ac_main_gl"-->
+<!--                android:layout_width="960px"-->
+<!--                android:layout_height="540px" />-->
+<!--        </RelativeLayout>-->
+
+        <EditText
+            android:id="@+id/et_rtmpurl"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:background="#FFF"
+            android:gravity="center" />
 
     </RelativeLayout>
 
