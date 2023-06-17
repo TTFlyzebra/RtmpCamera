@@ -9,30 +9,6 @@ add_library(
         )
 
 add_library(
-        ssl
-        SHARED
-        IMPORTED
-)
-
-set_target_properties(
-        ssl
-        PROPERTIES IMPORTED_LOCATION
-        ${CMAKE_SOURCE_DIR}/src/main/cpp/libs/${ANDROID_ABI}/libssl.so
-)
-
-add_library(
-        crypto
-        SHARED
-        IMPORTED
-)
-
-set_target_properties(
-        crypto
-        PROPERTIES IMPORTED_LOCATION
-        ${CMAKE_SOURCE_DIR}/src/main/cpp/libs/${ANDROID_ABI}/libcrypto.so
-)
-
-add_library(
         rtmp
         SHARED
         IMPORTED
