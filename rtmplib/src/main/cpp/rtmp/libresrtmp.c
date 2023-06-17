@@ -1,7 +1,7 @@
 #include <malloc.h>
 #include <string.h>
 #include "libresrtmp.h"
-#include "rtmp.h"
+#include "librtmp/rtmp.h"
 /*
  * Class:     com_flyzebra_rtmp_RtmpClient
  * Method:    open
@@ -48,8 +48,6 @@
  	LOGD("RTMP_OPENED");
  	return rtmp;
  }
-
-
 
 /*
  * Class:     com_flyzebra_rtmp_RtmpClient
@@ -108,8 +106,8 @@
     free(packet);
     (*env)->ReleaseByteArrayElements(env, data, buffer, 0);
     if (!ret) {
-    	LOGD("end write error %d", sockerr);
-		return sockerr;
+    	LOGD("end write error %d", errno);
+		return errno;
     }else
     {
     	//LOGD("end write success");
@@ -128,13 +126,3 @@
  	RTMP_Free((RTMP*)rtmp);
  	return 0;
  }
-
-JNIEXPORT jstring JNICALL Java_com_flyzebra_rtmp_RtmpClient_getIpAddr
-		(JNIEnv * env,jobject thiz,jlong rtmp) {
-	if(rtmp!=0){
-		RTMP* r= (RTMP*)rtmp;
-		return (*env)->NewStringUTF(env, r->ipaddr);
-	}else {
-		return (*env)->NewStringUTF(env, "");
-	}
-}

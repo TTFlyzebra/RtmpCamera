@@ -6,7 +6,7 @@ package com.flyzebra.rtmp;
 public class RtmpClient {
 
     static {
-        System.loadLibrary("rtmplib");
+        System.loadLibrary("zebra_rtmp");
     }
 
     /**
@@ -21,7 +21,5 @@ public class RtmpClient {
     public static native int write(long rtmpPointer, byte[] data, int size, int type, int ts);
 
     public static native int close(long rtmpPointer);
-
-    public static native String getIpAddr(long rtmpPointer);
 
 }

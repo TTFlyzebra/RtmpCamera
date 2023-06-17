@@ -1,39 +1,55 @@
-cmake_minimum_required(VERSION 3.4.1)
+cmake_minimum_required(VERSION 3.10.2)
 
-add_definitions("-DNO_CRYPTO")
-include_directories(src/main/cpp/rtmp/librtmp)
-include_directories(src/main/cpp/restreaming)
+include_directories(src/main/cpp/include)
 
-#native-lib
-file(GLOB PROJECT_SOURCES1
-        "src/main/cpp/rtmp/librtmp/*.c"
+add_library(
+        zebra_rtmp
+        SHARED
         "src/main/cpp/rtmp/libresrtmp.c"
         )
-file(GLOB PROJECT_SOURCES2 "src/main/cpp/restreaming/*.c")
 
+add_library(
+        ssl
+        SHARED
+        IMPORTED
+)
 
-find_library( # Sets the name of the path variable.
+set_target_properties(
+        ssl
+        PROPERTIES IMPORTED_LOCATION
+        ${CMAKE_SOURCE_DIR}/src/main/cpp/libs/${ANDROID_ABI}/libssl.so
+)
+
+add_library(
+        crypto
+        SHARED
+        IMPORTED
+)
+
+set_target_properties(
+        crypto
+        PROPERTIES IMPORTED_LOCATION
+        ${CMAKE_SOURCE_DIR}/src/main/cpp/libs/${ANDROID_ABI}/libcrypto.so
+)
+
+add_library(
+        rtmp
+        SHARED
+        IMPORTED
+)
+
+set_target_properties(
+        rtmp
+        PROPERTIES IMPORTED_LOCATION
+        ${CMAKE_SOURCE_DIR}/src/main/cpp/libs/${ANDROID_ABI}/librtmp.so
+)
+
+find_library(
         log-lib
         log)
 
-add_library(
-        rtmplib
-        SHARED
-        ${PROJECT_SOURCES1}
+target_link_libraries(
+        zebra_rtmp
+        rtmp
+        ${log-lib}
         )
-
-target_link_libraries( # Specifies the target library.
-        rtmplib
-        ${log-lib})
-
-
-add_library(
-        flytools
-        SHARED
-        ${PROJECT_SOURCES2}
-)
-
-target_link_libraries( # Specifies the target library.
-        flytools
-        android
-        ${log-lib})

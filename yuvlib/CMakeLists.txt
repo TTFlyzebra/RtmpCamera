@@ -12,9 +12,10 @@ add_library(libyuv
         STATIC
         IMPORTED)
 
-set_target_properties(libyuv
+set_target_properties(
+        libyuv
         PROPERTIES IMPORTED_LOCATION
-        ${CMAKE_SOURCE_DIR}/src/main/jniLibs/${ANDROID_ABI}/libyuv.a)
+        ${CMAKE_SOURCE_DIR}/src/main/cpp/libs/${ANDROID_ABI}/libyuv.a)
 
 target_link_libraries( # Specifies the target library.
         flylibyuv
