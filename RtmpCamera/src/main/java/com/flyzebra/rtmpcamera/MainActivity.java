@@ -82,7 +82,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
         mTextureView.setSurfaceTextureListener(this);
 
         et_rtmpurl = findViewById(R.id.et_rtmpurl);
-        et_rtmpurl.setText((String) SPUtil.get(this, "RTMP_URL", "rtmp://103.5.126.213/live/flycam"));
+        et_rtmpurl.setText((String) SPUtil.get(this, "RTMP_URL", "rtmp://192.168.1.88/live/flycam"));
 
         cameraID = (String) SPUtil.get(this, "CAMERAID", "0");
 

@@ -6,7 +6,7 @@ package com.flyzebra.rtmp;
 public class RtmpClient {
 
     static {
-        System.loadLibrary("zebra_rtmp");
+        System.loadLibrary("zebra_rtmps");
     }
 
     /**
