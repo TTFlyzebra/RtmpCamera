@@ -10,3 +10,4 @@ local.properties
 
 # Project exclude paths
 /rtmplib/.cxx/
+/yuvlib/.cxx/
