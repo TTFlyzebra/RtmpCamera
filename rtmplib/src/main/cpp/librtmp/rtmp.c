@@ -57,11 +57,11 @@ static const char *my_dhm_G = "4";
 #include <nettle/base64.h>
 #include <nettle/md5.h>
 #else	/* USE_OPENSSL */
-#include <openssl/ssl.h>
-#include <openssl/rc4.h>
-#include <openssl/md5.h>
-#include <openssl/bio.h>
-#include <openssl/buffer.h>
+#include "include/openssl/ssl.h"
+#include "include/openssl/rc4.h"
+#include "include/openssl/md5.h"
+#include "include/openssl/bio.h"
+#include "include/openssl/buffer.h"
 #endif
 TLS_CTX RTMP_TLS_ctx;
 #endif

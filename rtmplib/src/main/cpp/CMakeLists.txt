@@ -1,17 +1,20 @@
 cmake_minimum_required(VERSION 3.10.2)
 
-project("zebra_rtmps")
-include_directories(${CMAKE_SOURCE_DIR})
+project("rtmpdump")
+include_directories(
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include)
+
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DNO_CRYPTO")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DUSE_OPENSSL")
 
 add_library(
-        zebra_rtmps
+        rtmpdump
         SHARED
-        libresrtmp.c
+        rtmpdump.c
         librtmp/amf.c
         librtmp/hashswf.c
-        librtmp/log.c
+        librtmp/FlyLog.c
         librtmp/parseurl.c
         librtmp/rtmp.c)
 
@@ -36,7 +39,7 @@ set_target_properties(
         ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libcrypto.so)
 
 target_link_libraries(
-        zebra_rtmps
+        rtmpdump
         ssl
         crypto
         z

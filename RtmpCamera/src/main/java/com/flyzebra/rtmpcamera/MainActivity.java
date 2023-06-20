@@ -82,7 +82,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
         mTextureView.setSurfaceTextureListener(this);
 
         et_rtmpurl = findViewById(R.id.et_rtmpurl);
-        et_rtmpurl.setText((String) SPUtil.get(this, "RTMP_URL", "rtmp://192.168.1.88/live/flycam"));
+        et_rtmpurl.setText((String) SPUtil.get(this, "RTMP_URL", "rtmps://192.168.3.8:1938/live/test"));
 
         cameraID = (String) SPUtil.get(this, "CAMERAID", "0");
 
@@ -159,7 +159,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     private void openCamera() {
         FlyLog.d("openCamera");
         rtmpUrl = et_rtmpurl.getText().toString();
-        if (rtmpUrl.startsWith("rtmp://")) {
+        if (rtmpUrl.startsWith("rtmp://") || rtmpUrl.startsWith("rtmps://")) {
             SPUtil.set(this, "RTMP_URL", rtmpUrl);
         } else {
             Toast.makeText(this, "rtmp url is error!", Toast.LENGTH_SHORT).show();
