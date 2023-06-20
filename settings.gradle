@@ -1,5 +1,5 @@
-include ':yuvlib'
-include ':rtmplib'
-include ':RtmpCamera'
 rootProject.name = "RtmpCamera"
+include ':RtmpCamera'
+include ':rtmplib'
 include ':utils'
+include ':yuvlib'

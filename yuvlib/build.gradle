@@ -3,11 +3,12 @@ plugins {
 }
 
 android {
-    compileSdk 33
+    namespace "com.flyzebra.libyuv"
+    compileSdk rootProject.ext.compileSdk
 
     defaultConfig {
-        minSdk 19
-        targetSdk 33
+        minSdk rootProject.ext.minSdk
+        targetSdk rootProject.ext.targetSdk
         versionCode 1
         versionName "1.0"
 
