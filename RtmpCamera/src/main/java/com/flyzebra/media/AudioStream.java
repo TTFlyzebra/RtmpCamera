@@ -104,7 +104,7 @@ public class AudioStream {
                     case MediaCodec.INFO_TRY_AGAIN_LATER:
                         break;
                     case MediaCodec.INFO_OUTPUT_FORMAT_CHANGED:
-                        FlvRtmpClient.getInstance().sendAudioSPS(mAudioEncoder.getOutputFormat());
+                        FlvRtmpClient.getInstance().sendAudioHeader(mAudioEncoder.getOutputFormat());
                         break;
                     default:
                         //FlyLog.d("AudioSenderThread,MediaCode,eobIndex=" + ouputIndex);

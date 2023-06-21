@@ -129,7 +129,8 @@ public class VideoStream implements Runnable {
                     case MediaCodec.INFO_TRY_AGAIN_LATER:
                         break;
                     case MediaCodec.INFO_OUTPUT_FORMAT_CHANGED:
-                        FlvRtmpClient.getInstance().sendVideoSPS(mediaCodec.getOutputFormat());
+
+                        FlvRtmpClient.getInstance().sendVideoSpsPps(mediaCodec.getOutputFormat());
                         break;
                     default:
                         if (mOutBufferInfo.flags != MediaCodec.BUFFER_FLAG_CODEC_CONFIG && mOutBufferInfo.size != 0) {

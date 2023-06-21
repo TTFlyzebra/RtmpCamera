@@ -56,9 +56,9 @@ public class FlvRtmpClient {
             FlyLog.d("rtmp send:%s[%d][ok]", ByteUtil.bytes2String(data, 16), data.length);
         }
         if (ret != 0) {
-            //FlyLog.e("rtmp send:%s[%d][errer]", ByteUtil.bytes2String(data, 16), data.length);
+            FlyLog.e("rtmp send:%s[%d][errer]", ByteUtil.bytes2String(data, 16), data.length);
         }else{
-            FlyLog.d("rtmp send:%s[%d][errer]", ByteUtil.bytes2String(data, 16), data.length);
+            //FlyLog.d("rtmp send:%s[%d]", ByteUtil.bytes2String(data, 16), data.length);
         }
     }
 
@@ -68,7 +68,7 @@ public class FlvRtmpClient {
                 jniRtmpPointer.set(RtmpDump.open(url, true));
             }
         }
-        sendMetaData();
+        //sendMetaData();
     }
 
     public void sendMetaData() {
@@ -78,7 +78,7 @@ public class FlvRtmpClient {
         sendData(metaData, FLV_RTMP_PACKET_TYPE_INFO, 0);
     }
 
-    public void sendVideoSPS(MediaFormat mediaFormat) {
+    public void sendVideoSpsPps(MediaFormat mediaFormat) {
         if (jniRtmpPointer.get() == -1) return;
         ByteBuffer SPSByteBuff = mediaFormat.getByteBuffer("csd-0");
         SPSByteBuff.position(4);
@@ -135,7 +135,7 @@ public class FlvRtmpClient {
         sendData(frame, FLV_RTMP_PACKET_TYPE_VIDEO, ts);
     }
 
-    public void sendAudioSPS(MediaFormat format) {
+    public void sendAudioHeader(MediaFormat format) {
         if (jniRtmpPointer.get() == -1) return;
         ByteBuffer realData = format.getByteBuffer("csd-0");
         int packetLen = FLV_AUDIO_TAG_LENGTH + realData.remaining();
