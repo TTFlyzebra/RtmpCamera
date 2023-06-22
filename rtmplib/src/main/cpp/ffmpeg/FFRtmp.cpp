@@ -3,6 +3,7 @@
 //
 
 #include "FFRtmp.h"
+#include "utils/FlyLog.h"
 
 extern "C" {
 #include <libavformat/avformat.h>
@@ -22,6 +23,7 @@ int FFRtmp::openRtmpUrl(char *url) {
     if (ret < 0) {
         return ret;
     }
+    FLOGE("avformat_alloc_output_context2 ret=%d", ret);
     //输出视频流
     const AVCodec *v_codec = avcodec_find_decoder_by_name("h264");
     AVStream *v_outstream = avformat_new_stream(octx, v_codec);
@@ -30,4 +32,8 @@ int FFRtmp::openRtmpUrl(char *url) {
     AVStream *a_outstream = avformat_new_stream(octx, a_codec);
 
     av_dump_format(octx, 0, url, 1);
+}
+
+void FFRtmp::close() {
+    FLOGE("ffmpeg rtmp close!");
 }

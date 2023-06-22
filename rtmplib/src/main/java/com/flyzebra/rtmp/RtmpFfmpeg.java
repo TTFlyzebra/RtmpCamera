@@ -7,15 +7,27 @@ public class RtmpFfmpeg {
         System.loadLibrary("rtmpffmpeg");
     }
 
-    public RtmpFfmpeg(){
+    private long mPtr = -1;
+
+    public RtmpFfmpeg() {
         FlyLog.d("RtmpPushHelper()");
     }
 
-    public void connected(){
+    public void start(String url) {
+        mPtr = openRtmpPushUrl(url);
+    }
+
+    public void close() {
+        if (mPtr > 0) {
+            closeRtmpPush(mPtr);
+        }
+    }
+
+    public void connected() {
 
     }
 
-    public void disconnected(){
+    public void disconnected() {
 
     }
 
@@ -32,4 +44,5 @@ public class RtmpFfmpeg {
     private native int pushAudioFrame(long id, byte[] data, int dataLen);
 
     private native void closeRtmpPush(long id);
+
 }

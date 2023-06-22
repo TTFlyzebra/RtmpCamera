@@ -1,10 +1,16 @@
 #include <jni.h>
 #include <string>
+#include "ffmpeg/FFRtmp.h"
 
 extern "C"
 JNIEXPORT jlong JNICALL
 Java_com_flyzebra_rtmp_RtmpFfmpeg_openRtmpPushUrl(JNIEnv *env, jobject thiz, jstring url) {
     // TODO: implement openRtmpUrl()
+    auto* pFFRtmp = new FFRtmp();
+    const char *_url = env->GetStringUTFChars(url, 0);
+    pFFRtmp->openRtmpUrl(const_cast<char *>(_url));
+    env->ReleaseStringUTFChars(url, _url);
+    return reinterpret_cast<jlong>(pFFRtmp);
 }
 
 extern "C"
@@ -47,5 +53,6 @@ Java_com_flyzebra_rtmp_RtmpFfmpeg_pushAudioFrame(JNIEnv *env, jobject thiz, jlon
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_flyzebra_rtmp_RtmpFfmpeg_closeRtmpPush(JNIEnv *env, jobject thiz, jlong id) {
-    // TODO: implement closeRtmp()
+    FFRtmp* ffRtmp = reinterpret_cast<FFRtmp *>(id);
+    ffRtmp->close();
 }

@@ -11,6 +11,8 @@ public:
     FFRtmp();
     ~FFRtmp();
     int openRtmpUrl(char* url);
+
+    void close();
 };
 
 
