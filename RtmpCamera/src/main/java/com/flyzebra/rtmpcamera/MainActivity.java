@@ -31,7 +31,6 @@ import androidx.core.app.ActivityCompat;
 import com.flyzebra.media.AudioStream;
 import com.flyzebra.media.VideoStream;
 import com.flyzebra.rtmp.FlvRtmpClient;
-import com.flyzebra.rtmp.RtmpFfmpeg;
 import com.flyzebra.utils.CameraUtils;
 import com.flyzebra.utils.FlyLog;
 import com.flyzebra.utils.SPUtil;
@@ -83,7 +82,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
         mTextureView.setSurfaceTextureListener(this);
 
         et_rtmpurl = findViewById(R.id.et_rtmpurl);
-        et_rtmpurl.setText((String) SPUtil.get(this, "RTMP_URL", "rtmps://192.168.3.8:1938/live/test"));
+        et_rtmpurl.setText((String) SPUtil.get(this, "RTMP_URL", "rtmps://192.168.1.88:1938/live/test"));
 
         cameraID = (String) SPUtil.get(this, "CAMERAID", "0");
 
@@ -94,11 +93,6 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
         }
         FlyLog.d("isPermission=" + isPermission);
 //        glVideoView = findViewById(R.id.ac_main_gl);
-
-        RtmpFfmpeg rtmpFfmpeg = new RtmpFfmpeg();
-        rtmpFfmpeg.start("rtmps://192.168.3.8/live/test2");
-        rtmpFfmpeg.close();
-
     }
 
     @Override
