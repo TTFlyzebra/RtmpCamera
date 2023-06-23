@@ -15,7 +15,6 @@ import android.opengl.Matrix;
 import com.flyzebra.camera.R;
 import com.flyzebra.utils.GLShaderUtils;
 import com.flyzebra.utils.MatrixUtils;
-import com.flyzebra.utils.SPUtil;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -45,7 +44,6 @@ public class EglFilter {
 
     public EglFilter(Context context) {
         mContext = context;
-        reloadMirror();
     }
 
     public void setTextureId(int textureId) {
@@ -89,6 +87,8 @@ public class EglFilter {
         GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT | GLES30.GL_DEPTH_BUFFER_BIT);
 
         System.arraycopy(vMatrixBase, 0, vMatrixData, 0, vMatrixBase.length);
+
+        isMirror.set(EglCamera.cameraID.endsWith("0"));
         if (isMirror.get()) Matrix.scaleM(vMatrixData, 0, 1f, -1f, 1f);
 
         GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
@@ -110,8 +110,4 @@ public class EglFilter {
 
     }
 
-    public void reloadMirror() {
-        String camid = (String) SPUtil.get(mContext, "CAMERA_ID", "1");
-        isMirror.set(camid.endsWith("0"));
-    }
 }

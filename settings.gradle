@@ -1,5 +1,5 @@
 rootProject.name = "RtmpCamera"
 include ':RtmpCamera'
-include ':rtmplib'
-include ':utils'
-include ':yuvlib'
+include ':librtmp'
+include ':libutils'
+include ':libyuv'

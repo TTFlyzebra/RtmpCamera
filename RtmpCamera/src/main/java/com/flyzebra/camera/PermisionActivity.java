@@ -18,6 +18,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
+import com.flyzebra.camera.ui.CameraActivity;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -74,5 +76,6 @@ public class PermisionActivity extends AppCompatActivity {
 
     private void jumpMainActivity(){
         startActivity(new Intent(this, CameraActivity.class));
+        finish();
     }
 }

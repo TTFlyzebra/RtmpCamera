@@ -20,9 +20,11 @@ public class EglRender implements GLSurfaceView.Renderer {
     private EglFilter mEglFilter;
     private SurfaceTexture mSurfaceTexture;
     private int[] mCameraTexture = new int[1];
+    private EglCamera mEglCamera;
 
-    public EglRender(Context context) {
+    public EglRender(Context context, EglCamera eglCamera) {
         mContext = context;
+        mEglCamera = eglCamera;
         mSurfaceTexture = new SurfaceTexture(mCameraTexture[0]);
         mEglFilter = new EglFilter(context);
     }
@@ -46,10 +48,7 @@ public class EglRender implements GLSurfaceView.Renderer {
         mSurfaceTexture.updateTexImage();
         mEglFilter.setTextureId(mCameraTexture[0]);
         mEglFilter.onDraw();
-    }
-
-    public void swapCamera() {
-        mEglFilter.reloadMirror();
+        mEglCamera.upRenderData();
     }
 
     public SurfaceTexture getSurfaceTexture() {
