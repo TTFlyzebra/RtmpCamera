@@ -21,7 +21,7 @@ android {
     compileSdk rootProject.ext.compileSdk
 
     defaultConfig {
-        applicationId "com.flyzebra.rtmpcamera"
+        applicationId "com.flyzebra.camera"
         minSdk rootProject.ext.minSdk
         targetSdk rootProject.ext.targetSdk
         versionCode gitCommitCount.toInteger()

@@ -5,7 +5,7 @@ import android.graphics.SurfaceTexture;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 
-import com.flyzebra.rtmpcamera.R;
+import com.flyzebra.camera.R;
 import com.flyzebra.utils.FlyLog;
 
 import java.nio.Buffer;
@@ -28,9 +28,9 @@ public class GlRender implements GLSurfaceView.Renderer, SurfaceTexture.OnFrameA
     //顶点坐标
     static float vertexData[] = {   // in counterclockwise order:
             -1f, -1f, 0.0f, // bottom left
-            1f, -1f, 0.0f, // bottom right
-            -1f, 1f, 0.0f, // top left
-            1f, 1f, 0.0f,  // top right
+            +1f, -1f, 0.0f, // bottom right
+            -1f, +1f, 0.0f, // top left
+            +1f, +1f, 0.0f,  // top right
     };
     //纹理坐标
     static float textureData[] = {   // in counterclockwise order:

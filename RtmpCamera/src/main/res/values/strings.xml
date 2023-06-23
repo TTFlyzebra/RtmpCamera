@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">RtmpCamera</string>
+    <string name="app_name">推流测试</string>
     <string name="switch_camera">交换摄像头</string>
     <string name="push_camera">开始推流</string>
 </resources>
