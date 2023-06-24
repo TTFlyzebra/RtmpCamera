@@ -6,17 +6,17 @@
     android:background="#000"
     tools:context=".ui.CameraActivity">
 
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
         android:padding="20dp">
 
-        <com.flyzebra.camera.view.AutoSurfaceView
+        <com.flyzebra.camera.view.AutoTextureView
             android:id="@+id/ac_main_tuv"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
-    </RelativeLayout>
+    </LinearLayout>
 
     <EditText
         android:id="@+id/et_rtmpurl"

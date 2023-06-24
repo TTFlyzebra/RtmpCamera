@@ -27,59 +27,6 @@ public class VideoEncoder implements Runnable {
         mCallBack = cb;
     }
 
-    @Override
-    public void run() {
-        MediaCodec.BufferInfo mBufferInfo = new MediaCodec.BufferInfo();
-        while (is_codec_init.get()) {
-            int outputIndex = codec.dequeueOutputBuffer(mBufferInfo, 200000);
-            switch (outputIndex) {
-                case MediaCodec.INFO_TRY_AGAIN_LATER:
-                    break;
-                case MediaCodec.INFO_OUTPUT_FORMAT_CHANGED:
-                    try {
-                        MediaFormat format = codec.getOutputFormat();
-                        String mini = format.getString(MediaFormat.KEY_MIME);
-                        if (MediaFormat.MIMETYPE_VIDEO_AVC.equals(mini)) {
-                            ByteBuffer spsBuffer = format.getByteBuffer("csd-0");
-                            spsBuffer.position(0);
-                            int spsLen = spsBuffer.remaining();
-                            byte[] sps = new byte[spsLen];
-                            spsBuffer.get(sps, 0, spsLen);
-                            ByteBuffer ppsBuffer = format.getByteBuffer("csd-1");
-                            ppsBuffer.position(0);
-                            int ppsLen = ppsBuffer.remaining();
-                            byte[] pps = new byte[ppsLen];
-                            ppsBuffer.get(pps, 0, ppsLen);
-                            mCallBack.notifyAvcSpsPps(sps, spsLen, pps, ppsLen);
-                        } else {
-                            ByteBuffer bufer = format.getByteBuffer("csd-0");
-                            bufer.position(0);
-                            int vspLen = bufer.remaining();
-                            byte[] vsp = new byte[vspLen];
-                            bufer.get(vsp, 0, vspLen);
-                            mCallBack.notifyAvcVpsSpsPps(vsp, vspLen);
-                        }
-                    } catch (Exception e) {
-                        FlyLog.e(e.toString());
-                    }
-                    break;
-                case MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED:
-                    break;
-                default:
-                    if ((mBufferInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) == 0 && mBufferInfo.size != 0) {
-                        ByteBuffer outputBuffer = codec.getOutputBuffer(outputIndex);
-                        outputBuffer.position(mBufferInfo.offset + 4);
-                        int size = outputBuffer.remaining();
-                        byte[] data = new byte[size];
-                        outputBuffer.get(data, 0, size);
-                        mCallBack.notifyVideoData(data, size, mBufferInfo.presentationTimeUs);
-                    }
-                    codec.releaseOutputBuffer(outputIndex, false);
-                    break;
-            }
-        }
-    }
-
     public boolean isCodecInit() {
         return is_codec_init.get();
     }
@@ -135,6 +82,59 @@ public class VideoEncoder implements Runnable {
             codec.stop();
             codec.release();
             codec = null;
+        }
+    }
+
+    @Override
+    public void run() {
+        MediaCodec.BufferInfo mBufferInfo = new MediaCodec.BufferInfo();
+        while (is_codec_init.get()) {
+            int outputIndex = codec.dequeueOutputBuffer(mBufferInfo, 200000);
+            switch (outputIndex) {
+                case MediaCodec.INFO_TRY_AGAIN_LATER:
+                    break;
+                case MediaCodec.INFO_OUTPUT_FORMAT_CHANGED:
+                    try {
+                        MediaFormat format = codec.getOutputFormat();
+                        String mini = format.getString(MediaFormat.KEY_MIME);
+                        if (MediaFormat.MIMETYPE_VIDEO_AVC.equals(mini)) {
+                            ByteBuffer spsBuffer = format.getByteBuffer("csd-0");
+                            spsBuffer.position(0);
+                            int spsLen = spsBuffer.remaining();
+                            byte[] sps = new byte[spsLen];
+                            spsBuffer.get(sps, 0, spsLen);
+                            ByteBuffer ppsBuffer = format.getByteBuffer("csd-1");
+                            ppsBuffer.position(0);
+                            int ppsLen = ppsBuffer.remaining();
+                            byte[] pps = new byte[ppsLen];
+                            ppsBuffer.get(pps, 0, ppsLen);
+                            mCallBack.notifyAvcSpsPps(sps, spsLen, pps, ppsLen);
+                        } else {
+                            ByteBuffer bufer = format.getByteBuffer("csd-0");
+                            bufer.position(0);
+                            int vspLen = bufer.remaining();
+                            byte[] vsp = new byte[vspLen];
+                            bufer.get(vsp, 0, vspLen);
+                            mCallBack.notifyAvcVpsSpsPps(vsp, vspLen);
+                        }
+                    } catch (Exception e) {
+                        FlyLog.e(e.toString());
+                    }
+                    break;
+                case MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED:
+                    break;
+                default:
+                    if ((mBufferInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) == 0 && mBufferInfo.size != 0) {
+                        ByteBuffer outputBuffer = codec.getOutputBuffer(outputIndex);
+                        outputBuffer.position(mBufferInfo.offset);
+                        int size = outputBuffer.remaining();
+                        byte[] data = new byte[size];
+                        outputBuffer.get(data, 0, size);
+                        mCallBack.notifyVideoData(data, size, mBufferInfo.presentationTimeUs);
+                    }
+                    codec.releaseOutputBuffer(outputIndex, false);
+                    break;
+            }
         }
     }
 }

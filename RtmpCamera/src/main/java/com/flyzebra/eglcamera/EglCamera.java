@@ -10,6 +10,7 @@ package com.flyzebra.eglcamera;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -25,7 +26,7 @@ import android.os.HandlerThread;
 import android.util.Size;
 import android.view.Surface;
 import android.view.SurfaceHolder;
-import android.view.SurfaceView;
+import android.view.TextureView;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
@@ -36,13 +37,13 @@ import com.flyzebra.utils.SPUtil;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class EglCamera implements SurfaceHolder.Callback {
+public class EglCamera implements TextureView.SurfaceTextureListener {
     private Context mContext;
-    private SurfaceView mSurfaceView;
+    private TextureView mTextureView;
     private int cam_w = 1280;
     private int cam_h = 720;
 
@@ -58,26 +59,26 @@ public class EglCamera implements SurfaceHolder.Callback {
     private CameraDevice mCameraDevice;
     private HandlerThread mCamThread;
     private Handler mCamBkHandler;
-    private EglSurfaceView mEglView;
-    private EglRender mEglRender;
+    private EglGLSurface mEglGLSurface;
     private AtomicBoolean is_opened = new AtomicBoolean(false);
     private static final Object mFrameLock = new Object();
     private Thread wFrameThread;
 
-    public EglCamera(Context context, SurfaceView surfaceView, int width, int height) {
+    public EglCamera(Context context, TextureView textureView, int width, int height) {
         mContext = context;
-        mSurfaceView = surfaceView;
+        mTextureView = textureView;
         cam_w = width;
         cam_h = height;
-        mSurfaceView.getHolder().addCallback(this);
+        nv12 = new byte[cam_w * cam_h * 3 / 2];
+        frameRGBA = ByteBuffer.wrap(new byte[cam_w * cam_h * 4]);
+
+        mTextureView.setSurfaceTextureListener(this);
         mCamThread = new HandlerThread("camera2");
         mCamThread.start();
         mCamBkHandler = new Handler(mCamThread.getLooper());
         mCameraManager = (CameraManager) mContext.getSystemService(Context.CAMERA_SERVICE);
         cameraID = (String) SPUtil.get(mContext, CAMERA_ID_KEY, "1");
-        mEglRender = new EglRender(context, this);
-        mEglView = new EglSurfaceView(context);
-        mEglView.init(mEglRender, mSurfaceView.getHolder());
+        mEglGLSurface = new EglGLSurface(mContext, this);
     }
 
     public void openCamera() {
@@ -88,6 +89,7 @@ public class EglCamera implements SurfaceHolder.Callback {
                 @Override
                 public void onOpened(CameraDevice camera) {
                     try {
+                        mCameraDevice = camera;
                         CameraCharacteristics c = mCameraManager.getCameraCharacteristics(cameraID);
                         StreamConfigurationMap map = c.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
                         Size[] sizes = map.getOutputSizes(SurfaceHolder.class);
@@ -110,20 +112,17 @@ public class EglCamera implements SurfaceHolder.Callback {
                                 }
                             }
                         }
-
                         FlyLog.d("Camera width=%d, height=%d", mSize.getWidth(), mSize.getHeight());
-                        cam_w = Math.min(mSize.getWidth(), mSize.getHeight());
-                        cam_h = Math.max(mSize.getWidth(), mSize.getHeight());
-                        nv12 = new byte[cam_w * cam_h * 3 / 2];
-                        frameRGBA = ByteBuffer.wrap(new byte[cam_w * cam_h * 4]);
-                        mEglRender.getSurfaceTexture().setDefaultBufferSize(cam_w, cam_h);
+                        mEglGLSurface.getSurfaceTexture().setDefaultBufferSize(mSize.getWidth(), mSize.getHeight());
+                        mTextureView.getSurfaceTexture().setDefaultBufferSize(mSize.getWidth(), mSize.getHeight());
 
-                        mCameraDevice = camera;
                         mBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
-                        Surface surface = new Surface(mEglRender.getSurfaceTexture());
-                        mBuilder.addTarget(surface);
+                        Surface surface1 = new Surface(mEglGLSurface.getSurfaceTexture());
+                        mBuilder.addTarget(surface1);
+                        Surface surface2 = new Surface(mTextureView.getSurfaceTexture());
+                        mBuilder.addTarget(surface2);
                         mCameraDevice.createCaptureSession(
-                                Collections.singletonList(surface),
+                                Arrays.asList(surface1, surface2),
                                 new CameraCaptureSession.StateCallback() {
                                     @Override
                                     public void onConfigured(CameraCaptureSession session) {
@@ -140,7 +139,7 @@ public class EglCamera implements SurfaceHolder.Callback {
                                                         @Override
                                                         public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
                                                             super.onCaptureCompleted(session, request, result);
-                                                            mEglView.requestRender();
+                                                            mEglGLSurface.requestRender();
                                                         }
                                                     }, mCamBkHandler);
                                         } catch (CameraAccessException e1) {
@@ -226,24 +225,6 @@ public class EglCamera implements SurfaceHolder.Callback {
         openCamera();
     }
 
-    @Override
-    public void surfaceCreated(@NonNull SurfaceHolder holder) {
-        mEglView.surfaceCreated(holder);
-        openCamera();
-    }
-
-    @Override
-    public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) {
-        mEglView.surfaceChanged(holder, format, width, height);
-    }
-
-    @Override
-    public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
-        mEglView.surfaceDestroyed(holder);
-        mEglRender.surfaceDestroyed(holder);
-        closeCamera();
-    }
-
     public void upRenderData() {
         if (frameRGBA != null) {
             GLES30.glReadPixels(0, 0, cam_w, cam_h, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, frameRGBA);
@@ -261,6 +242,29 @@ public class EglCamera implements SurfaceHolder.Callback {
 
     public void removeFrameListener(IFrameListener listener) {
         listeners.remove(listener);
+    }
+
+    @Override
+    public void onSurfaceTextureAvailable(@NonNull SurfaceTexture surface, int width, int height) {
+        mEglGLSurface.create();
+        openCamera();
+    }
+
+    @Override
+    public void onSurfaceTextureSizeChanged(@NonNull SurfaceTexture surface, int width, int height) {
+
+    }
+
+    @Override
+    public boolean onSurfaceTextureDestroyed(@NonNull SurfaceTexture surface) {
+        mEglGLSurface.destory();
+        closeCamera();
+        return false;
+    }
+
+    @Override
+    public void onSurfaceTextureUpdated(@NonNull SurfaceTexture surface) {
+
     }
 }
 

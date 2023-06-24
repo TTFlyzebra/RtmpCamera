@@ -1,7 +1,7 @@
 package com.flyzebra.camera.ui;
 
 import android.os.Bundle;
-import android.view.SurfaceView;
+import android.view.TextureView;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
@@ -20,7 +20,7 @@ import com.flyzebra.utils.FlyLog;
 import com.flyzebra.utils.SPUtil;
 
 public class CameraActivity extends AppCompatActivity implements IFrameListener {
-    private SurfaceView mSurfaceView;
+    private TextureView mTextureView;
     private EditText et_rtmpurl;
     private EglCamera mEglCamera;
     private RtmpusherService rtmpPushService;
@@ -30,7 +30,7 @@ public class CameraActivity extends AppCompatActivity implements IFrameListener 
         super.onCreate(savedInstanceState);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON, WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_main);
-        mSurfaceView = findViewById(R.id.ac_main_tuv);
+        mTextureView = findViewById(R.id.ac_main_tuv);
         et_rtmpurl = findViewById(R.id.et_rtmpurl);
 
         rtmpPushService = new RtmpusherService();
@@ -38,7 +38,7 @@ public class CameraActivity extends AppCompatActivity implements IFrameListener 
         et_rtmpurl.setText(rtmp_rul);
         rtmpPushService.start(Config.MIME_TYPE, rtmp_rul);
 
-        mEglCamera = new EglCamera(this, mSurfaceView, Config.CAM_W, Config.CAM_H);
+        mEglCamera = new EglCamera(this, mTextureView, Config.CAM_W, Config.CAM_H);
         mEglCamera.addFrameListener(this);
     }
 

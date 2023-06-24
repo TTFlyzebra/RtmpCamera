@@ -8,6 +8,7 @@
 package com.flyzebra.eglcamera;
 
 import android.content.Context;
+import android.graphics.SurfaceTexture;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES30;
 import android.opengl.Matrix;
@@ -38,16 +39,15 @@ public class EglFilter {
             0, 0, 0, 1
     };
     private float[] vMatrixData = Arrays.copyOf(OM, 16);
-    private int mTextureId = 0;
+
+    private SurfaceTexture mSurfaceTexture;
+    private int mTextureId[] = new int[1];
 
     private AtomicBoolean isMirror = new AtomicBoolean(true);
 
     public EglFilter(Context context) {
         mContext = context;
-    }
-
-    public void setTextureId(int textureId) {
-        mTextureId = textureId;
+        mSurfaceTexture = new SurfaceTexture(mTextureId[0]);
     }
 
     public void onCreated() {
@@ -83,16 +83,18 @@ public class EglFilter {
     }
 
     public void onDraw() {
+        mSurfaceTexture.updateTexImage();
+
         GLES30.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT | GLES30.GL_DEPTH_BUFFER_BIT);
 
         System.arraycopy(vMatrixBase, 0, vMatrixData, 0, vMatrixBase.length);
 
-        isMirror.set(EglCamera.cameraID.endsWith("0"));
+        isMirror.set(EglCamera.cameraID.endsWith("1"));
         if (isMirror.get()) Matrix.scaleM(vMatrixData, 0, 1f, -1f, 1f);
 
         GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
-        GLES30.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, mTextureId);
+        GLES30.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, mTextureId[0]);
 
         GLES30.glUseProgram(glProgram);
         GLES30.glUniformMatrix4fv(vMatrix, 1, false, vMatrixData, 0);
@@ -110,4 +112,7 @@ public class EglFilter {
 
     }
 
+    public SurfaceTexture getSurfaceTexture() {
+        return mSurfaceTexture;
+    }
 }
