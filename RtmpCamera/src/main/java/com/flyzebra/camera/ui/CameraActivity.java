@@ -16,6 +16,7 @@ import com.flyzebra.eglcamera.IFrameListener;
 import com.flyzebra.notify.Notify;
 import com.flyzebra.notify.NotifyType;
 import com.flyzebra.utils.ByteUtil;
+import com.flyzebra.utils.FlyLog;
 import com.flyzebra.utils.SPUtil;
 
 public class CameraActivity extends AppCompatActivity implements IFrameListener {
@@ -31,10 +32,11 @@ public class CameraActivity extends AppCompatActivity implements IFrameListener 
         setContentView(R.layout.activity_main);
         mSurfaceView = findViewById(R.id.ac_main_tuv);
         et_rtmpurl = findViewById(R.id.et_rtmpurl);
-        et_rtmpurl.setText((String) SPUtil.get(this, Config.RTMP_KEY, Config.RTMP_URL));
 
-        rtmpPushService = new RtmpusherService(Config.MIME_TYPE, Config.CAM_W, Config.CAM_H, Config.RTMP_URL);
-        rtmpPushService.start();
+        rtmpPushService = new RtmpusherService();
+        String rtmp_rul = (String) SPUtil.get(this, Config.RTMP_KEY, Config.RTMP_URL);
+        et_rtmpurl.setText(rtmp_rul);
+        rtmpPushService.start(Config.MIME_TYPE, Config.CAM_W, Config.CAM_H, rtmp_rul);
 
         mEglCamera = new EglCamera(this, mSurfaceView, Config.CAM_W, Config.CAM_H);
         mEglCamera.addFrameListener(this);
@@ -43,14 +45,17 @@ public class CameraActivity extends AppCompatActivity implements IFrameListener 
     @Override
     protected void onDestroy() {
         mEglCamera.removeFrameListener(this);
-
         rtmpPushService.stop();
         super.onDestroy();
+        FlyLog.e("RtmpCamera onDestroy");
     }
 
     public void switchCamera(View view) {
         if (mEglCamera != null) {
-            SPUtil.set(this, Config.RTMP_KEY, et_rtmpurl.getText().toString());
+            String rtmp_url = et_rtmpurl.getText().toString();
+            SPUtil.set(this, Config.RTMP_KEY, rtmp_url);
+            rtmpPushService.stop();
+            rtmpPushService.start(Config.MIME_TYPE, Config.CAM_W, Config.CAM_H, rtmp_url);
             mEglCamera.swapCamera();
         }
     }

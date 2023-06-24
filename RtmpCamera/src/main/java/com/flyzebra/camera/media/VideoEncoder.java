@@ -39,7 +39,7 @@ public class VideoEncoder implements Runnable {
                     try {
                         MediaFormat format = codec.getOutputFormat();
                         String mini = format.getString(MediaFormat.KEY_MIME);
-                        if (("video/avc").equals(mini)) {
+                        if (MediaFormat.MIMETYPE_VIDEO_AVC.equals(mini)) {
                             ByteBuffer spsBuffer = format.getByteBuffer("csd-0");
                             spsBuffer.position(0);
                             int spsLen = spsBuffer.remaining();
@@ -66,7 +66,7 @@ public class VideoEncoder implements Runnable {
                 case MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED:
                     break;
                 default:
-                    if (mBufferInfo.flags != MediaCodec.BUFFER_FLAG_CODEC_CONFIG && mBufferInfo.size != 0) {
+                    if ((mBufferInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) == 0 && mBufferInfo.size != 0) {
                         ByteBuffer outputBuffer = codec.getOutputBuffer(outputIndex);
                         outputBuffer.position(mBufferInfo.offset);
                         outputBuffer.limit(mBufferInfo.offset + mBufferInfo.size);

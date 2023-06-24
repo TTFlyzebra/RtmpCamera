@@ -36,6 +36,7 @@ extern "C"
 JNIEXPORT void JNICALL
 Java_com_flyzebra_rtmp_RtmpDump__1release(JNIEnv *env, jobject clazz, jlong p_obj) {
     RtmpDump *rtmpDump = reinterpret_cast<RtmpDump *>(p_obj);
+    rtmpDump->release();
     delete rtmpDump;
 }
 

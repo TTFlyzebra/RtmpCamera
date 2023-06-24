@@ -2,7 +2,7 @@
 // Created by Administrator on 2023/6/23.
 //
 
-#include <cmath>
+#include <cstdio>
 #include <unistd.h>
 #include "RtmpDump.h"
 #include "buffer/BufferManager.h"
@@ -13,6 +13,7 @@
 RtmpDump::RtmpDump(JavaVM *jvm, JNIEnv *env, jobject thiz)
         : send_t(nullptr), rtmp(nullptr), is_connect(false),
           _vps(nullptr), _sps(nullptr), _pps(nullptr) {
+    FLOGD("%s()", __func__);
     callBack = new CallBack(jvm, env, thiz);
 }
 
@@ -30,10 +31,15 @@ RtmpDump::~RtmpDump() {
         free(_pps);
         _pps = nullptr;
     }
+    FLOGD("%s()", __func__);
 }
 
 void RtmpDump::init(const char *url) {
-    sprintf(rtmp_url, "%s", url);
+    int len = strlen(url);
+    int size = sizeof(rtmp_url);
+    memset(rtmp_url, 0, sizeof(rtmp_url));
+    memcpy(rtmp_url, url, len);
+    FLOGD("RtmpDump set rtmp url to %s[%d]----%s[%d]", url, len, rtmp_url, size);
     if (send_t != nullptr) {
         is_stop = true;
         send_t->join();
@@ -64,14 +70,20 @@ void RtmpDump::release() {
 void RtmpDump::rtmpConnect() {
     rtmp = RTMP_Alloc();
     if (rtmp == nullptr) {
-        FLOGD("RTMP_Alloc=NULL");
+        FLOGE("RTMP_Alloc failed");
         return;
     }
     RTMP_Init(rtmp);
-    int ret = RTMP_SetupURL(rtmp, rtmp_url);
-    if (!ret) {
+    rtmp->Link.timeout = 10;
+    rtmp->Link.lFlags |= RTMP_LF_LIVE;
+
+    char url[1024];
+    sprintf(url, "%s", rtmp_url);
+    FLOGE("RTMP_SetupURL url=%s", url);
+    int ret = RTMP_SetupURL(rtmp, url);
+    if (ret == FALSE) {
         RTMP_Free(rtmp);
-        FLOGD("RTMP_SetupURL ret=%d", ret);
+        FLOGE("RTMP_SetupURL %s---%s ret=%d", rtmp_url, url, ret);
         return;
     }
 
@@ -80,7 +92,7 @@ void RtmpDump::rtmpConnect() {
     ret = RTMP_Connect(rtmp, nullptr);
     if (!ret) {
         RTMP_Free(rtmp);
-        FLOGD("RTMP_Connect ret=%d", ret);
+        FLOGE("RTMP_Connect ret=%d", ret);
         return;
     }
 
@@ -89,7 +101,7 @@ void RtmpDump::rtmpConnect() {
         ret = RTMP_ConnectStream(rtmp, 0);
         RTMP_Close(rtmp);
         RTMP_Free(rtmp);
-        FLOGD("RTMP_ConnectStream ret=%s", ret);
+        FLOGE("RTMP_ConnectStream ret=%s", ret);
         return;
     }
     is_connect = true;

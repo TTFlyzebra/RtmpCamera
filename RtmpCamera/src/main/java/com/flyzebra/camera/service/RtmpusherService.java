@@ -7,6 +7,7 @@
  */
 package com.flyzebra.camera.service;
 
+import android.media.MediaFormat;
 import android.os.SystemClock;
 
 import com.flyzebra.camera.media.VideoEncoder;
@@ -18,24 +19,17 @@ import com.flyzebra.rtmp.RtmpDump;
 import com.flyzebra.utils.FlyLog;
 
 public class RtmpusherService implements VideoEncoderCB, INotify {
-    private String miniType;
-    private int width;
-    private int height;
-    private String rtmp_url;
     private VideoEncoder videoEncoder;
     private RtmpDump rtmpDump;
+    private String miniType;
 
-    public RtmpusherService(String miniType, int width, int height, String rtmp_url) {
-        this.miniType = miniType;
-        this.width = width;
-        this.height = height;
-        this.rtmp_url = rtmp_url;
-
+    public RtmpusherService() {
         videoEncoder = new VideoEncoder(this);
         rtmpDump = new RtmpDump();
     }
 
-    public void start() {
+    public void start(String miniType, int width, int height, String rtmp_url) {
+        this.miniType = miniType;
         Notify.get().registerListener(this);
         rtmpDump.init(rtmp_url);
         videoEncoder.initCodec(miniType, width, height, 8);
@@ -107,7 +101,7 @@ public class RtmpusherService implements VideoEncoderCB, INotify {
 
     @Override
     public void notifyVideoData(byte[] data, int size, long pts) {
-        if (("video/avc").equals(miniType)) {
+        if (MediaFormat.MIMETYPE_VIDEO_AVC.equals(miniType)) {
             rtmpDump.sendAvc(data, size, pts);
         } else {
             rtmpDump.sendHevc(data, size, pts);
