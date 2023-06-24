@@ -5,7 +5,7 @@
  * Date: 2022/7/20 6:05
  * Description:
  */
-package com.flyzebra.eglcamera;
+package com.flyzebra.camera.camera;
 
 import android.content.Context;
 import android.graphics.SurfaceTexture;
@@ -23,6 +23,8 @@ public class EglGLSurface {
     private final AtomicBoolean isStop = new AtomicBoolean(false);
     private Thread workThread;
     private EglFilter mEglFilter;
+    private SurfaceTexture mSurfaceTexture;
+    private int mTextureId[] = new int[1];
 
     public EglGLSurface(Context context, EglCamera eglCamera) {
         mContext = context;
@@ -43,8 +45,9 @@ public class EglGLSurface {
                     } catch (InterruptedException e) {
                         FlyLog.e(e.toString());
                     }
-                    if (isStop.get()) return;
                 }
+                if (isStop.get()) return;
+                mSurfaceTexture.updateTexImage();
                 mEglFilter.onDraw();
                 mEglCamera.upRenderData();
             }
@@ -73,6 +76,7 @@ public class EglGLSurface {
     }
 
     public SurfaceTexture getSurfaceTexture() {
-        return mEglFilter.getSurfaceTexture();
+        mSurfaceTexture = new SurfaceTexture(mEglFilter.getTextrueId());
+        return mSurfaceTexture;
     }
 }

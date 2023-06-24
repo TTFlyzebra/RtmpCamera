@@ -8,20 +8,28 @@ public interface VideoEncoderCB {
     * @param pps
     * @param ppsLen
     */
-   void notifyAvcSpsPps(byte[] sps, int spsLen, byte[] pps, int ppsLen);
+   void notifySpsPps(byte[] sps, int spsLen, byte[] pps, int ppsLen);
 
    /**
     * H265 vps-sps-pps
     * @param vsp
     * @param vspLen
     */
-   void notifyAvcVpsSpsPps(byte[] vsp, int vspLen);
+   void notifyVpsSpsPps(byte[] vsp, int vspLen);
 
    /**
-    * h264/h265
+    * h264
     * @param data
     * @param size
     * @param pts
     */
-   void notifyVideoData(byte[] data, int size, long pts);
+   void notifyAvcData(byte[] data, int size, long pts);
+
+   /**
+    * h265
+    * @param data
+    * @param size
+    * @param pts
+    */
+   void notifyHevcData(byte[] data, int size, long pts);
 }

@@ -29,6 +29,10 @@ public:
 
     void sendHevc(const char *data, int size, long pts);
 
+    void sendAacHead(const char *head, int size);
+
+    void sendAac(const char *data, int size, long pts);
+
 private:
     void rtmpConnect();
 
@@ -39,6 +43,8 @@ private:
     int _sendSpsPps(const char *sps, int spsLen, const char *pps, int ppsLen);
 
     int _sendVpsSpsPps(const char *vps, int vpsLen, const char *sps, int spsLen, const char *pps, int ppsLen);
+
+    int _sendAacHead(const char *head, int headLen);
 
 private:
     bool is_stop;
@@ -61,6 +67,9 @@ private:
     int spsLen;
     char* _pps;
     int ppsLen;
+
+    char* _head;
+    int headLen;
 };
 
 

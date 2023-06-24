@@ -1,8 +1,8 @@
 /**
- * FileName: VideoEncoder
+ * FileName: AudioEncoder
  * Author: FlyZebra
  * Email:flycnzebra@gmail.com
- * Date: 2023/6/23 15:06
+ * Date: 2023/6/24 13:46
  * Description:
  */
 package com.flyzebra.camera.media;
@@ -16,14 +16,14 @@ import com.flyzebra.utils.FlyLog;
 import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class VideoEncoder implements Runnable {
+public class AudioEncoder implements Runnable {
     private MediaCodec codec = null;
     private final Object codecLock = new Object();
     private final AtomicBoolean is_codec_init = new AtomicBoolean(false);
     private Thread mOutThread = null;
-    private VideoEncoderCB mCallBack;
+    private AudioEncoderCB mCallBack;
 
-    public VideoEncoder(VideoEncoderCB cb) {
+    public AudioEncoder(AudioEncoderCB cb) {
         mCallBack = cb;
     }
 
@@ -31,17 +31,18 @@ public class VideoEncoder implements Runnable {
         return is_codec_init.get();
     }
 
-    public void initCodec(String mimeType, int width, int height, int bitrate) {
+    public void initCodec(String mimeType, int sample, int channels, int bitrate) {
         synchronized (codecLock) {
             try {
-                MediaFormat format = MediaFormat.createVideoFormat(mimeType, width, height);
-                format.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar);
-                format.setInteger(MediaFormat.KEY_BIT_RATE, bitrate);
-                format.setInteger(MediaFormat.KEY_FRAME_RATE, 25);
-                format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 3);
-                format.setInteger(MediaFormat.KEY_BITRATE_MODE, MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR);
+                MediaFormat audioFormat = new MediaFormat();
+                audioFormat.setString(MediaFormat.KEY_MIME, mimeType);
+                audioFormat.setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC);
+                audioFormat.setInteger(MediaFormat.KEY_SAMPLE_RATE, sample);
+                audioFormat.setInteger(MediaFormat.KEY_CHANNEL_COUNT, channels);
+                audioFormat.setInteger(MediaFormat.KEY_BIT_RATE, bitrate);
+                audioFormat.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, bitrate / 4);
                 codec = MediaCodec.createEncoderByType(mimeType);
-                codec.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
+                codec.configure(audioFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
                 codec.start();
                 is_codec_init.set(true);
                 mOutThread = new Thread(this);
@@ -52,18 +53,18 @@ public class VideoEncoder implements Runnable {
         }
     }
 
-    public void inYuvData(byte[] data, int size, long pts) {
+    public void inPumData(byte[] data, int size, long pts) {
         synchronized (codecLock) {
             if (!is_codec_init.get() || data == null || size <= 0) return;
             int inIndex = codec.dequeueInputBuffer(200000);
             if (inIndex < 0) {
-                FlyLog.e("VideoEncoder codec->dequeueInputBuffer inIdex=%d error!", inIndex);
+                FlyLog.e("AudioEncoder codec->dequeueInputBuffer inIdex=%d error!", inIndex);
                 return;
             }
 
             ByteBuffer buffer = codec.getInputBuffer(inIndex);
             if (buffer == null) {
-                FlyLog.e("VideoEncoder codec->getInputBuffer inIdex=%d error!", inIndex);
+                FlyLog.e("AudioEncoder codec->getInputBuffer inIdex=%d error!", inIndex);
                 return;
             }
             buffer.put(data, 0, size);
@@ -96,27 +97,12 @@ public class VideoEncoder implements Runnable {
                 case MediaCodec.INFO_OUTPUT_FORMAT_CHANGED:
                     try {
                         MediaFormat format = codec.getOutputFormat();
-                        String mini = format.getString(MediaFormat.KEY_MIME);
-                        if (MediaFormat.MIMETYPE_VIDEO_AVC.equals(mini)) {
-                            ByteBuffer spsBuffer = format.getByteBuffer("csd-0");
-                            spsBuffer.position(0);
-                            int spsLen = spsBuffer.remaining();
-                            byte[] sps = new byte[spsLen];
-                            spsBuffer.get(sps, 0, spsLen);
-                            ByteBuffer ppsBuffer = format.getByteBuffer("csd-1");
-                            ppsBuffer.position(0);
-                            int ppsLen = ppsBuffer.remaining();
-                            byte[] pps = new byte[ppsLen];
-                            ppsBuffer.get(pps, 0, ppsLen);
-                            mCallBack.notifySpsPps(sps, spsLen, pps, ppsLen);
-                        } else {
-                            ByteBuffer bufer = format.getByteBuffer("csd-0");
-                            bufer.position(0);
-                            int vspLen = bufer.remaining();
-                            byte[] vsp = new byte[vspLen];
-                            bufer.get(vsp, 0, vspLen);
-                            mCallBack.notifyVpsSpsPps(vsp, vspLen);
-                        }
+                        ByteBuffer buffer = format.getByteBuffer("csd-0");
+                        buffer.position(0);
+                        int size = buffer.remaining();
+                        byte[] head = new byte[size];
+                        buffer.get(head, 0, size);
+                        mCallBack.notifyAacHead(head, size);
                     } catch (Exception e) {
                         FlyLog.e(e.toString());
                     }
@@ -130,14 +116,7 @@ public class VideoEncoder implements Runnable {
                         int size = outputBuffer.remaining();
                         byte[] data = new byte[size];
                         outputBuffer.get(data, 0, size);
-                        //long pts = System.nanoTime()/1000L;
-                        MediaFormat format = codec.getOutputFormat();
-                        String mini = format.getString(MediaFormat.KEY_MIME);
-                        if (MediaFormat.MIMETYPE_VIDEO_AVC.equals(mini)) {
-                            mCallBack.notifyAvcData(data, size, mBufferInfo.presentationTimeUs);
-                        } else {
-                            mCallBack.notifyHevcData(data, size, mBufferInfo.presentationTimeUs);
-                        }
+                        mCallBack.notifyAacData(data, size, mBufferInfo.presentationTimeUs);
                     }
                     codec.releaseOutputBuffer(outputIndex, false);
                     break;

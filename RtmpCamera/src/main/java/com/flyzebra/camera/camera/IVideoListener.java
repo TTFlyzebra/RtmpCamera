@@ -1,5 +1,5 @@
-package com.flyzebra.eglcamera;
+package com.flyzebra.camera.camera;
 
-public interface IFrameListener {
+public interface IVideoListener {
     void notifyRGBFrame(byte[] data, int size, int width, int heigth);
 }

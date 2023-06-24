@@ -85,3 +85,25 @@ Java_com_flyzebra_rtmp_RtmpDump__1sendHevc(JNIEnv *env, jobject thiz, jlong p_ob
     rtmpDump->sendHevc(data, size, pts);
     env->ReleaseByteArrayElements(jdata, (jbyte *) data, JNI_ABORT);
 }
+
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_flyzebra_rtmp_RtmpDump__1sendAacHead(JNIEnv *env, jobject thiz, jlong p_obj,
+                                              jbyteArray jhead, jint headLen) {
+    const char *head = reinterpret_cast<const char *>(env->GetByteArrayElements(jhead, JNI_FALSE));
+    RtmpDump *rtmpDump = reinterpret_cast<RtmpDump *>(p_obj);
+    rtmpDump->sendAacHead(head, headLen);
+    env->ReleaseByteArrayElements(jhead, (jbyte *) head, JNI_ABORT);
+}
+
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_flyzebra_rtmp_RtmpDump__1sendAac(JNIEnv *env, jobject thiz, jlong p_obj, jbyteArray jdata,
+                                          jint size, jlong pts) {
+    const char *data = reinterpret_cast<const char *>(env->GetByteArrayElements(jdata, JNI_FALSE));
+    RtmpDump *rtmpDump = reinterpret_cast<RtmpDump *>(p_obj);
+    rtmpDump->sendAac(data, size, pts);
+    env->ReleaseByteArrayElements(jdata, (jbyte *) data, JNI_ABORT);
+}

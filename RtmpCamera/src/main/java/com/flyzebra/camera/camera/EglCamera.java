@@ -5,12 +5,11 @@
  * Date: 2023/6/23 8:49
  * Description:可以通过OPENGL获取相机的原始RGB数据
  */
-package com.flyzebra.eglcamera;
+package com.flyzebra.camera.camera;
 
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -41,7 +40,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class EglCamera implements TextureView.SurfaceTextureListener {
+public class EglCamera{
     private Context mContext;
     private TextureView mTextureView;
     private int cam_w = 1280;
@@ -72,7 +71,6 @@ public class EglCamera implements TextureView.SurfaceTextureListener {
         nv12 = new byte[cam_w * cam_h * 3 / 2];
         frameRGBA = ByteBuffer.wrap(new byte[cam_w * cam_h * 4]);
 
-        mTextureView.setSurfaceTextureListener(this);
         mCamThread = new HandlerThread("camera2");
         mCamThread.start();
         mCamBkHandler = new Handler(mCamThread.getLooper());
@@ -112,7 +110,7 @@ public class EglCamera implements TextureView.SurfaceTextureListener {
                                 }
                             }
                         }
-                        FlyLog.d("Camera width=%d, height=%d", mSize.getWidth(), mSize.getHeight());
+                        //FlyLog.d("Camera width=%d, height=%d", mSize.getWidth(), mSize.getHeight());
                         mEglGLSurface.getSurfaceTexture().setDefaultBufferSize(mSize.getWidth(), mSize.getHeight());
                         mTextureView.getSurfaceTexture().setDefaultBufferSize(mSize.getWidth(), mSize.getHeight());
 
@@ -155,6 +153,7 @@ public class EglCamera implements TextureView.SurfaceTextureListener {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
+                    mEglGLSurface.create();
                 }
 
                 @Override
@@ -189,7 +188,7 @@ public class EglCamera implements TextureView.SurfaceTextureListener {
                         0,
                         cam_w,
                         cam_h);
-                for (IFrameListener listener : listeners) {
+                for (IVideoListener listener : listeners) {
                     listener.notifyRGBFrame(nv12, nv12.length, cam_w, cam_h);
                 }
             }
@@ -216,6 +215,7 @@ public class EglCamera implements TextureView.SurfaceTextureListener {
         } catch (Exception e) {
             FlyLog.e(e.toString());
         }
+        mEglGLSurface.destory();
     }
 
     public void swapCamera() {
@@ -234,37 +234,14 @@ public class EglCamera implements TextureView.SurfaceTextureListener {
         }
     }
 
-    private final List<IFrameListener> listeners = new ArrayList<>();
+    private final List<IVideoListener> listeners = new ArrayList<>();
 
-    public void addFrameListener(IFrameListener listener) {
+    public void addFrameListener(IVideoListener listener) {
         listeners.add(listener);
     }
 
-    public void removeFrameListener(IFrameListener listener) {
+    public void removeFrameListener(IVideoListener listener) {
         listeners.remove(listener);
-    }
-
-    @Override
-    public void onSurfaceTextureAvailable(@NonNull SurfaceTexture surface, int width, int height) {
-        mEglGLSurface.create();
-        openCamera();
-    }
-
-    @Override
-    public void onSurfaceTextureSizeChanged(@NonNull SurfaceTexture surface, int width, int height) {
-
-    }
-
-    @Override
-    public boolean onSurfaceTextureDestroyed(@NonNull SurfaceTexture surface) {
-        mEglGLSurface.destory();
-        closeCamera();
-        return false;
-    }
-
-    @Override
-    public void onSurfaceTextureUpdated(@NonNull SurfaceTexture surface) {
-
     }
 }
 

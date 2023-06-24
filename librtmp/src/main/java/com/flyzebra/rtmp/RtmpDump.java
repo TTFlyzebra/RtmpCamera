@@ -45,6 +45,16 @@ public class RtmpDump {
         _sendHevc(pRtmpPointer, data, size, pts);
     }
 
+    public void sendAacHead(byte[] head, int size) {
+        if (pRtmpPointer == -1) return;
+        _sendAacHead(pRtmpPointer, head, size);
+    }
+
+    public void sendAac(byte[] data, int size, long pts) {
+        if (pRtmpPointer == -1) return;
+        _sendAac(pRtmpPointer, data, size, pts);
+    }
+
     public void onError(int errCode) {
         FlyLog.e("RtmpDump onError %d", errCode);
     }
@@ -60,4 +70,9 @@ public class RtmpDump {
     private native void _sendAvc(long pRtmpPointer, byte[] data, int size, long pts);
 
     private native void _sendHevc(long pRtmpPointer, byte[] data, int size, long pts);
+
+    private native void _sendAacHead(long pRtmpPointer, byte[] head, int headLen);
+
+    private native void _sendAac(long pRtmpPointer, byte[] data, int size, long pts);
+
 }

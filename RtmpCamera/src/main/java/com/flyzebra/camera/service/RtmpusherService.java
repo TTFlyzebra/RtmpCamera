@@ -7,10 +7,9 @@
  */
 package com.flyzebra.camera.service;
 
-import android.media.MediaFormat;
-import android.os.SystemClock;
-
 import com.flyzebra.camera.Config;
+import com.flyzebra.camera.media.AudioEncoder;
+import com.flyzebra.camera.media.AudioEncoderCB;
 import com.flyzebra.camera.media.VideoEncoder;
 import com.flyzebra.camera.media.VideoEncoderCB;
 import com.flyzebra.notify.INotify;
@@ -20,30 +19,31 @@ import com.flyzebra.rtmp.RtmpDump;
 import com.flyzebra.utils.ByteUtil;
 import com.flyzebra.utils.FlyLog;
 
-public class RtmpusherService implements VideoEncoderCB, INotify {
+public class RtmpusherService implements VideoEncoderCB, AudioEncoderCB, INotify {
     private VideoEncoder videoEncoder;
+    private AudioEncoder audioEncoder;
     private RtmpDump rtmpDump;
-    private String miniType;
 
     public RtmpusherService() {
-        videoEncoder = new VideoEncoder(this);
         rtmpDump = new RtmpDump();
     }
 
-    public void start(String miniType, String rtmp_url) {
-        this.miniType = miniType;
-        Notify.get().registerListener(this);
+    public void start(String rtmp_url) {
         rtmpDump.init(rtmp_url);
+        videoEncoder = new VideoEncoder(this);
+        audioEncoder = new AudioEncoder(this);
+        Notify.get().registerListener(this);
     }
 
     public void stop() {
         Notify.get().unregisterListener(this);
         rtmpDump.release();
         videoEncoder.releaseCodec();
+        audioEncoder.releaseCodec();
     }
 
     @Override
-    public void notifyAvcSpsPps(byte[] sps, int spsLen, byte[] pps, int ppsLen) {
+    public void notifySpsPps(byte[] sps, int spsLen, byte[] pps, int ppsLen) {
         if (sps[0] == 0x00 && sps[1] == 0x00 && sps[2] == 0x00 && sps[3] == 0x01) {
             int sps_len = spsLen - 4;
             byte[] _sps = new byte[sps_len];
@@ -62,7 +62,7 @@ public class RtmpusherService implements VideoEncoderCB, INotify {
     }
 
     @Override
-    public void notifyAvcVpsSpsPps(byte[] vsp, int vspLen) {
+    public void notifyVpsSpsPps(byte[] vsp, int vspLen) {
         try {
             int vps_p = -1;
             int sps_p = -1;
@@ -101,12 +101,23 @@ public class RtmpusherService implements VideoEncoderCB, INotify {
     }
 
     @Override
-    public void notifyVideoData(byte[] data, int size, long pts) {
-        if (MediaFormat.MIMETYPE_VIDEO_AVC.equals(miniType)) {
-            rtmpDump.sendAvc(data, size, pts);
-        } else {
-            rtmpDump.sendHevc(data, size, pts);
-        }
+    public void notifyAvcData(byte[] data, int size, long pts) {
+        rtmpDump.sendAvc(data, size, pts);
+    }
+
+    @Override
+    public void notifyHevcData(byte[] data, int size, long pts) {
+        rtmpDump.sendHevc(data, size, pts);
+    }
+
+    @Override
+    public void notifyAacHead(byte[] head, int size) {
+        rtmpDump.sendAacHead(head, size);
+    }
+
+    @Override
+    public void notifyAacData(byte[] data, int size, long pts) {
+        rtmpDump.sendAac(data, size, pts);
     }
 
     @Override
@@ -119,9 +130,17 @@ public class RtmpusherService implements VideoEncoderCB, INotify {
             if (!videoEncoder.isCodecInit()) {
                 int width = ByteUtil.bytes2Short(params, 0, true);
                 int height = ByteUtil.bytes2Short(params, 2, true);
-                videoEncoder.initCodec(miniType, width, height, Config.BIT_RATE);
+                videoEncoder.initCodec(Config.CAM_MIME_TYPE, width, height, Config.CAM_BIT_RATE);
             }
-            videoEncoder.inYuvData(data, size, SystemClock.uptimeMillis());
+            videoEncoder.inYuvData(data, size, System.nanoTime() / 1000);
+        } else if (NotifyType.NOTI_MICOUT_PCM == type) {
+            if (!audioEncoder.isCodecInit()) {
+                int sample = ByteUtil.bytes2Short(params, 0, true);
+                int channels = ByteUtil.bytes2Short(params, 2, true);
+                int bitrate = ByteUtil.bytes2Short(params, 4, true);
+                audioEncoder.initCodec(Config.MIC_MIME_TYPE, sample, channels, bitrate);
+            }
+            audioEncoder.inPumData(data, size, System.nanoTime() / 1000);
         }
     }
 }

@@ -5,7 +5,7 @@
  * Date: 2022/7/21 8:16
  * Description:
  */
-package com.flyzebra.eglcamera;
+package com.flyzebra.camera.camera;
 
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;

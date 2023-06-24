@@ -24,7 +24,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.WebCamera">
         <activity
-            android:name=".PermisionActivity"
+            android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

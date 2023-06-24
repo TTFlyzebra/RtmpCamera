@@ -23,7 +23,7 @@ import com.flyzebra.camera.ui.CameraActivity;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PermisionActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity {
     private final String[] mPermissions = {
             Manifest.permission.CAMERA,
             Manifest.permission.RECORD_AUDIO,
