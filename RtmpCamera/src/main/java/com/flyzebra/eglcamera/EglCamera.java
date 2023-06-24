@@ -43,11 +43,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class EglCamera implements SurfaceHolder.Callback {
     private Context mContext;
     private SurfaceView mSurfaceView;
-    private int cam_w = 720;
-    private int cam_h = 1280;
+    private int cam_w = 1280;
+    private int cam_h = 720;
 
     private ByteBuffer frameRGBA;
-    private byte[] i420;
+    private byte[] nv12;
 
     private final String CAMERA_ID_KEY = "CAMERA_ID_KEY";
     public static String cameraID = "1";
@@ -92,15 +92,17 @@ public class EglCamera implements SurfaceHolder.Callback {
                         StreamConfigurationMap map = c.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
                         Size[] sizes = map.getOutputSizes(SurfaceHolder.class);
                         Size mSize = sizes[0];
-                        if (mSize.getWidth() != cam_h || mSize.getHeight() != cam_w) {
-                            int mSizeX = Math.abs((mSize.getWidth() * mSize.getHeight()) - (cam_h * cam_w));
+                        int width = Math.max(cam_w, cam_h);
+                        int heigth = Math.min(cam_w, cam_h);
+                        if (mSize.getWidth() != width || mSize.getHeight() != heigth) {
+                            int mSizeX = Math.abs((mSize.getWidth() * mSize.getHeight()) - (cam_w * heigth));
                             for (int i = 1; i < sizes.length; i++) {
                                 Size size = sizes[i];
-                                if (size.getWidth() == cam_h && mSize.getHeight() == cam_w) {
+                                if (size.getWidth() == width && mSize.getHeight() == heigth) {
                                     mSize = size;
                                     break;
                                 } else {
-                                    int sizeX = Math.abs((size.getWidth() * size.getHeight()) - (cam_h * cam_w));
+                                    int sizeX = Math.abs((size.getWidth() * size.getHeight()) - (width * heigth));
                                     if (sizeX < mSizeX) {
                                         mSizeX = sizeX;
                                         mSize = size;
@@ -109,12 +111,12 @@ public class EglCamera implements SurfaceHolder.Callback {
                             }
                         }
 
-                        cam_w = mSize.getHeight();
-                        cam_h = mSize.getWidth();
-                        i420 = new byte[cam_w * cam_h * 3 / 2];
+                        FlyLog.d("Camera width=%d, height=%d", mSize.getWidth(), mSize.getHeight());
+                        cam_w = Math.min(mSize.getWidth(), mSize.getHeight());
+                        cam_h = Math.max(mSize.getWidth(), mSize.getHeight());
+                        nv12 = new byte[cam_w * cam_h * 3 / 2];
                         frameRGBA = ByteBuffer.wrap(new byte[cam_w * cam_h * 4]);
-
-                        mEglRender.getSurfaceTexture().setDefaultBufferSize(cam_h, cam_w);
+                        mEglRender.getSurfaceTexture().setDefaultBufferSize(cam_w, cam_h);
 
                         mCameraDevice = camera;
                         mBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
@@ -182,14 +184,14 @@ public class EglCamera implements SurfaceHolder.Callback {
                     }
                 }
                 if (!is_opened.get()) return;
-                FlyYuv.ARGBToI420(
+                FlyYuv.ARGBToNV21(
                         frameRGBA.array(),
-                        i420,
+                        nv12,
                         0,
                         cam_w,
                         cam_h);
                 for (IFrameListener listener : listeners) {
-                    listener.notifyRGBFrame(i420, i420.length, cam_w, cam_h);
+                    listener.notifyRGBFrame(nv12, nv12.length, cam_w, cam_h);
                 }
             }
         }, "frame_thread");

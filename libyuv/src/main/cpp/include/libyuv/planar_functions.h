@@ -439,13 +439,13 @@ int HalfFloatPlane(const uint16* src_y,
 // Quantize a rectangle of ARGB. Alpha unaffected.
 // scale is a 16 bit fractional fixed point scaler between 0 and 65535.
 // interval_size should be a value between 1 and 255.
-// interval_offset should be a value between 0 and 255.
+// interval_dst_offset should be a value between 0 and 255.
 LIBYUV_API
 int ARGBQuantize(uint8* dst_argb,
                  int dst_stride_argb,
                  int scale,
                  int interval_size,
-                 int interval_offset,
+                 int interval_dst_offset,
                  int x,
                  int y,
                  int width,

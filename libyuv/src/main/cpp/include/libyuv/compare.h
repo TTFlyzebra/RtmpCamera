@@ -22,7 +22,7 @@ extern "C" {
 LIBYUV_API
 uint32 HashDjb2(const uint8* src, uint64 count, uint32 seed);
 
-// Scan an opaque argb image and return fourcc based on alpha offset.
+// Scan an opaque argb image and return fourcc based on alpha dst_offset.
 // Returns FOURCC_ARGB, FOURCC_BGRA, or 0 if unknown.
 LIBYUV_API
 uint32 ARGBDetect(const uint8* argb, int stride_argb, int width, int height);

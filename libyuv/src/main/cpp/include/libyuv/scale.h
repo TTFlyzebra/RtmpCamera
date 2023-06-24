@@ -126,7 +126,7 @@ int ScaleOffset(const uint8* src_i420,
                 uint8* dst_i420,
                 int dst_width,
                 int dst_height,
-                int dst_yoffset,
+                int dst_ydst_offset,
                 LIBYUV_BOOL interpolate);
 
 // For testing, allow disabling of specialized scalers.

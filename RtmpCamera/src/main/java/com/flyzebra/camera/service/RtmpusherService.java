@@ -10,12 +10,14 @@ package com.flyzebra.camera.service;
 import android.media.MediaFormat;
 import android.os.SystemClock;
 
+import com.flyzebra.camera.Config;
 import com.flyzebra.camera.media.VideoEncoder;
 import com.flyzebra.camera.media.VideoEncoderCB;
 import com.flyzebra.notify.INotify;
 import com.flyzebra.notify.Notify;
 import com.flyzebra.notify.NotifyType;
 import com.flyzebra.rtmp.RtmpDump;
+import com.flyzebra.utils.ByteUtil;
 import com.flyzebra.utils.FlyLog;
 
 public class RtmpusherService implements VideoEncoderCB, INotify {
@@ -28,11 +30,10 @@ public class RtmpusherService implements VideoEncoderCB, INotify {
         rtmpDump = new RtmpDump();
     }
 
-    public void start(String miniType, int width, int height, String rtmp_url) {
+    public void start(String miniType, String rtmp_url) {
         this.miniType = miniType;
         Notify.get().registerListener(this);
         rtmpDump.init(rtmp_url);
-        videoEncoder.initCodec(miniType, width, height, 8);
     }
 
     public void stop() {
@@ -115,6 +116,11 @@ public class RtmpusherService implements VideoEncoderCB, INotify {
     @Override
     public void handle(int type, byte[] data, int size, byte[] params) {
         if (NotifyType.NOTI_CAMFIX_YUV == type) {
+            if (!videoEncoder.isCodecInit()) {
+                int width = ByteUtil.bytes2Short(params, 0, true);
+                int height = ByteUtil.bytes2Short(params, 2, true);
+                videoEncoder.initCodec(miniType, width, height, Config.BIT_RATE);
+            }
             videoEncoder.inYuvData(data, size, SystemClock.uptimeMillis());
         }
     }

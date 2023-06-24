@@ -36,7 +36,7 @@ public class CameraActivity extends AppCompatActivity implements IFrameListener 
         rtmpPushService = new RtmpusherService();
         String rtmp_rul = (String) SPUtil.get(this, Config.RTMP_KEY, Config.RTMP_URL);
         et_rtmpurl.setText(rtmp_rul);
-        rtmpPushService.start(Config.MIME_TYPE, Config.CAM_W, Config.CAM_H, rtmp_rul);
+        rtmpPushService.start(Config.MIME_TYPE, rtmp_rul);
 
         mEglCamera = new EglCamera(this, mSurfaceView, Config.CAM_W, Config.CAM_H);
         mEglCamera.addFrameListener(this);
@@ -47,7 +47,7 @@ public class CameraActivity extends AppCompatActivity implements IFrameListener 
         mEglCamera.removeFrameListener(this);
         rtmpPushService.stop();
         super.onDestroy();
-        FlyLog.e("RtmpCamera onDestroy");
+        FlyLog.d("RtmpCamera exit!");
     }
 
     public void switchCamera(View view) {
@@ -55,7 +55,7 @@ public class CameraActivity extends AppCompatActivity implements IFrameListener 
             String rtmp_url = et_rtmpurl.getText().toString();
             SPUtil.set(this, Config.RTMP_KEY, rtmp_url);
             rtmpPushService.stop();
-            rtmpPushService.start(Config.MIME_TYPE, Config.CAM_W, Config.CAM_H, rtmp_url);
+            rtmpPushService.start(Config.MIME_TYPE, rtmp_url);
             mEglCamera.swapCamera();
         }
     }

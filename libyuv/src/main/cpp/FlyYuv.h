@@ -7,26 +7,32 @@
 
 class FlyYuv {
 public:
-    static void NV12ToI420(unsigned char *src, unsigned char *dst, int width, int heigh);
+    static void
+    NV12ToI420(unsigned char *src, unsigned char *dst, int dst_offset, int width, int heigh);
 
-    static void NV12ToARGB(unsigned char *src, unsigned char *dst, int width, int height);
+    static void
+    NV12ToARGB(unsigned char *src, unsigned char *dst, int dst_offset, int width, int height);
 
-    static void I420ToNV12(unsigned char *src, unsigned char *dst, int width, int height);
+    static void
+    I420ToNV12(unsigned char *src, unsigned char *dst, int dst_offset, int width, int height);
 
-    static void ARGBToI420(unsigned char *src, unsigned char *dst, int offset, int width, int height);
+    static void
+    ARGBToI420(unsigned char *src, unsigned char *dst, int dst_offset, int width, int height);
 
-    static void I420ToARGB(unsigned char *src, unsigned char *dst, int width, int height);
+    static void
+    ARGBToNV12(unsigned char *src, unsigned char *dst, int dst_offset, int width, int height);
 
-    static void RGB24ToI420(unsigned char *src, unsigned char *dst, int offset, int width, int height);
+    static void
+    ARGBToNV21(unsigned char *src, unsigned char *dst, int dst_offset, int width, int height);
 
-    static void I422ToI420(unsigned char *src, unsigned char *dst, int width, int height);
+    static void
+    I420ToARGB(unsigned char *src, unsigned char *dst, int dst_offset, int width, int height);
 
-    static void I420AddMark(unsigned char *i420, const unsigned char *mark, int width, int height);
+    static void
+    RGB24ToI420(unsigned char *src, unsigned char *dst, int dst_offset, int width, int height);
 
-    static void I420Compose(unsigned char *i420, unsigned char *back, const unsigned char *water, int width, int height, const unsigned char *mapFilter);
-
-    static void I420Filter(unsigned char *i420, const unsigned char *back, int width, int height, const unsigned char *mapFilter);
-
+    static void
+    I422ToI420(unsigned char *src, unsigned char *dst, int dst_offset, int width, int height);
 };
 
 

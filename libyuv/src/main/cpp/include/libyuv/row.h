@@ -574,55 +574,55 @@ extern const struct YuvConstants SIMD_ALIGNED(kYvuH709Constants);  // BT.709
 #define BUNDLELOCK ".bundle_lock\n"
 #define BUNDLEUNLOCK ".bundle_unlock\n"
 #define MEMACCESS(base) "%%nacl:(%%r15,%q" #base ")"
-#define MEMACCESS2(offset, base) "%%nacl:" #offset "(%%r15,%q" #base ")"
-#define MEMLEA(offset, base) #offset "(%q" #base ")"
-#define MEMLEA3(offset, index, scale) #offset "(,%q" #index "," #scale ")"
-#define MEMLEA4(offset, base, index, scale) \
-  #offset "(%q" #base ",%q" #index "," #scale ")"
+#define MEMACCESS2(dst_offset, base) "%%nacl:" #dst_offset "(%%r15,%q" #base ")"
+#define MEMLEA(dst_offset, base) #dst_offset "(%q" #base ")"
+#define MEMLEA3(dst_offset, index, scale) #dst_offset "(,%q" #index "," #scale ")"
+#define MEMLEA4(dst_offset, base, index, scale) \
+  #dst_offset "(%q" #base ",%q" #index "," #scale ")"
 #define MEMMOVESTRING(s, d) "%%nacl:(%q" #s "),%%nacl:(%q" #d "), %%r15"
 #define MEMSTORESTRING(reg, d) "%%" #reg ",%%nacl:(%q" #d "), %%r15"
-#define MEMOPREG(opcode, offset, base, index, scale, reg)                 \
+#define MEMOPREG(opcode, dst_offset, base, index, scale, reg)                 \
   BUNDLELOCK                                                              \
-  "lea " #offset "(%q" #base ",%q" #index "," #scale "),%%r14d\n" #opcode \
+  "lea " #dst_offset "(%q" #base ",%q" #index "," #scale "),%%r14d\n" #opcode \
   " (%%r15,%%r14),%%" #reg "\n" BUNDLEUNLOCK
-#define MEMOPMEM(opcode, reg, offset, base, index, scale)                 \
+#define MEMOPMEM(opcode, reg, dst_offset, base, index, scale)                 \
   BUNDLELOCK                                                              \
-  "lea " #offset "(%q" #base ",%q" #index "," #scale "),%%r14d\n" #opcode \
+  "lea " #dst_offset "(%q" #base ",%q" #index "," #scale "),%%r14d\n" #opcode \
   " %%" #reg ",(%%r15,%%r14)\n" BUNDLEUNLOCK
-#define MEMOPARG(opcode, offset, base, index, scale, arg)                 \
+#define MEMOPARG(opcode, dst_offset, base, index, scale, arg)                 \
   BUNDLELOCK                                                              \
-  "lea " #offset "(%q" #base ",%q" #index "," #scale "),%%r14d\n" #opcode \
+  "lea " #dst_offset "(%q" #base ",%q" #index "," #scale "),%%r14d\n" #opcode \
   " (%%r15,%%r14),%" #arg "\n" BUNDLEUNLOCK
-#define VMEMOPREG(opcode, offset, base, index, scale, reg1, reg2)         \
+#define VMEMOPREG(opcode, dst_offset, base, index, scale, reg1, reg2)         \
   BUNDLELOCK                                                              \
-  "lea " #offset "(%q" #base ",%q" #index "," #scale "),%%r14d\n" #opcode \
+  "lea " #dst_offset "(%q" #base ",%q" #index "," #scale "),%%r14d\n" #opcode \
   " (%%r15,%%r14),%%" #reg1 ",%%" #reg2 "\n" BUNDLEUNLOCK
-#define VEXTOPMEM(op, sel, reg, offset, base, index, scale)           \
+#define VEXTOPMEM(op, sel, reg, dst_offset, base, index, scale)           \
   BUNDLELOCK                                                          \
-  "lea " #offset "(%q" #base ",%q" #index "," #scale "),%%r14d\n" #op \
+  "lea " #dst_offset "(%q" #base ",%q" #index "," #scale "),%%r14d\n" #op \
   " $" #sel ",%%" #reg ",(%%r15,%%r14)\n" BUNDLEUNLOCK
 #else  // defined(__native_client__) && defined(__x86_64__)
 #define NACL_R14
 #define BUNDLEALIGN
 #define MEMACCESS(base) "(%" #base ")"
-#define MEMACCESS2(offset, base) #offset "(%" #base ")"
-#define MEMLEA(offset, base) #offset "(%" #base ")"
-#define MEMLEA3(offset, index, scale) #offset "(,%" #index "," #scale ")"
-#define MEMLEA4(offset, base, index, scale) \
-  #offset "(%" #base ",%" #index "," #scale ")"
+#define MEMACCESS2(dst_offset, base) #dst_offset "(%" #base ")"
+#define MEMLEA(dst_offset, base) #dst_offset "(%" #base ")"
+#define MEMLEA3(dst_offset, index, scale) #dst_offset "(,%" #index "," #scale ")"
+#define MEMLEA4(dst_offset, base, index, scale) \
+  #dst_offset "(%" #base ",%" #index "," #scale ")"
 #define MEMMOVESTRING(s, d)
 #define MEMSTORESTRING(reg, d)
-#define MEMOPREG(opcode, offset, base, index, scale, reg) \
-  #opcode " " #offset "(%" #base ",%" #index "," #scale "),%%" #reg "\n"
-#define MEMOPMEM(opcode, reg, offset, base, index, scale) \
-  #opcode " %%" #reg "," #offset "(%" #base ",%" #index "," #scale ")\n"
-#define MEMOPARG(opcode, offset, base, index, scale, arg) \
-  #opcode " " #offset "(%" #base ",%" #index "," #scale "),%" #arg "\n"
-#define VMEMOPREG(opcode, offset, base, index, scale, reg1, reg2)    \
-  #opcode " " #offset "(%" #base ",%" #index "," #scale "),%%" #reg1 \
+#define MEMOPREG(opcode, dst_offset, base, index, scale, reg) \
+  #opcode " " #dst_offset "(%" #base ",%" #index "," #scale "),%%" #reg "\n"
+#define MEMOPMEM(opcode, reg, dst_offset, base, index, scale) \
+  #opcode " %%" #reg "," #dst_offset "(%" #base ",%" #index "," #scale ")\n"
+#define MEMOPARG(opcode, dst_offset, base, index, scale, arg) \
+  #opcode " " #dst_offset "(%" #base ",%" #index "," #scale "),%" #arg "\n"
+#define VMEMOPREG(opcode, dst_offset, base, index, scale, reg1, reg2)    \
+  #opcode " " #dst_offset "(%" #base ",%" #index "," #scale "),%%" #reg1 \
           ",%%" #reg2 "\n"
-#define VEXTOPMEM(op, sel, reg, offset, base, index, scale) \
-  #op " $" #sel ",%%" #reg "," #offset "(%" #base ",%" #index "," #scale ")\n"
+#define VEXTOPMEM(op, sel, reg, dst_offset, base, index, scale) \
+  #op " $" #sel ",%%" #reg "," #dst_offset "(%" #base ",%" #index "," #scale ")\n"
 #endif  // defined(__native_client__) && defined(__x86_64__)
 
 #if defined(__arm__) || defined(__aarch64__)
@@ -2854,17 +2854,17 @@ void RGBColorTableRow_X86(uint8* dst_argb, const uint8* table_argb, int width);
 void ARGBQuantizeRow_C(uint8* dst_argb,
                        int scale,
                        int interval_size,
-                       int interval_offset,
+                       int interval_dst_offset,
                        int width);
 void ARGBQuantizeRow_SSE2(uint8* dst_argb,
                           int scale,
                           int interval_size,
-                          int interval_offset,
+                          int interval_dst_offset,
                           int width);
 void ARGBQuantizeRow_NEON(uint8* dst_argb,
                           int scale,
                           int interval_size,
-                          int interval_offset,
+                          int interval_dst_offset,
                           int width);
 
 void ARGBShadeRow_C(const uint8* src_argb,

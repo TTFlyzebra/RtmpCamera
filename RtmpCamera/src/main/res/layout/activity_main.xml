@@ -7,32 +7,24 @@
     tools:context=".ui.CameraActivity">
 
     <RelativeLayout
-        android:id="@+id/rl01"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="center">
+        android:gravity="center"
+        android:padding="20dp">
 
-        <RelativeLayout
+        <com.flyzebra.camera.view.AutoSurfaceView
+            android:id="@+id/ac_main_tuv"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center">
-
-            <SurfaceView
-                android:id="@+id/ac_main_tuv"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_margin="20dp" />
-        </RelativeLayout>
-
-        <EditText
-            android:id="@+id/et_rtmpurl"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            android:background="#FFF"
-            android:gravity="center" />
-
+            android:layout_height="match_parent" />
     </RelativeLayout>
+
+    <EditText
+        android:id="@+id/et_rtmpurl"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:background="#FFF"
+        android:gravity="center" />
 
     <LinearLayout
         android:layout_width="match_parent"
