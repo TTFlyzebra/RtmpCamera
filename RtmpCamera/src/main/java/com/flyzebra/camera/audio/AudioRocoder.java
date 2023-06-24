@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class AudioRocoder implements Runnable {
     private AudioRecord mAudioRecord;
     private AtomicBoolean is_stop = new AtomicBoolean(true);
-    private byte[] pcm = new byte[960];
+    private byte[] pcm = new byte[1024];
     private Thread mRecordThread = null;
     private int sample;
     private int channel;
@@ -63,7 +63,7 @@ public class AudioRocoder implements Runnable {
     public void run() {
         mAudioRecord.startRecording();
         while (!is_stop.get()) {
-            int readSize = mAudioRecord.read(pcm, 0, 960);
+            int readSize = mAudioRecord.read(pcm, 0, pcm.length);
             if (readSize <= 0) {
                 FlyLog.e("Audio read mic buffer error, readSize=%d", readSize);
             } else {

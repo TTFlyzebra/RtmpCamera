@@ -17,7 +17,7 @@ public class Config {
     public static final String CAM_MIME_TYPE = MediaFormat.MIMETYPE_VIDEO_AVC;
     public static final int CAM_W = 720;
     public static final int CAM_H = 1280;
-    public static final int CAM_BIT_RATE = 80000000;
+    public static final int CAM_BIT_RATE = 2000000;
 
     public static final String MIC_MIME_TYPE = MediaFormat.MIMETYPE_AUDIO_AAC;
     public static final int MIC_SAMPLE = 44100;

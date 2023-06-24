@@ -126,7 +126,7 @@ public class VideoEncoder implements Runnable {
                 default:
                     if ((mBufferInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) == 0 && mBufferInfo.size != 0) {
                         ByteBuffer outputBuffer = codec.getOutputBuffer(outputIndex);
-                        outputBuffer.position(mBufferInfo.offset);
+                        outputBuffer.position(mBufferInfo.offset + 4);
                         int size = outputBuffer.remaining();
                         byte[] data = new byte[size];
                         outputBuffer.get(data, 0, size);

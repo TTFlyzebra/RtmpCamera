@@ -10,6 +10,7 @@ package com.flyzebra.camera.camera;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -43,8 +44,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class EglCamera{
     private Context mContext;
     private TextureView mTextureView;
-    private int cam_w = 1280;
-    private int cam_h = 720;
+    private int cam_w = 720;
+    private int cam_h = 1280;
 
     private ByteBuffer frameRGBA;
     private byte[] nv12;
@@ -111,13 +112,14 @@ public class EglCamera{
                             }
                         }
                         //FlyLog.d("Camera width=%d, height=%d", mSize.getWidth(), mSize.getHeight());
-                        mEglGLSurface.getSurfaceTexture().setDefaultBufferSize(mSize.getWidth(), mSize.getHeight());
-                        mTextureView.getSurfaceTexture().setDefaultBufferSize(mSize.getWidth(), mSize.getHeight());
-
                         mBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
-                        Surface surface1 = new Surface(mEglGLSurface.getSurfaceTexture());
+                        SurfaceTexture surfaceTexture1 = mEglGLSurface.getSurfaceTexture();
+                        SurfaceTexture surfaceTexture2 = mTextureView.getSurfaceTexture();
+                        surfaceTexture1.setDefaultBufferSize(mSize.getWidth(), mSize.getHeight());
+                        surfaceTexture2.setDefaultBufferSize(mSize.getWidth(), mSize.getHeight());
+                        Surface surface1 = new Surface(surfaceTexture1);
+                        Surface surface2 = new Surface(surfaceTexture2);
                         mBuilder.addTarget(surface1);
-                        Surface surface2 = new Surface(mTextureView.getSurfaceTexture());
                         mBuilder.addTarget(surface2);
                         mCameraDevice.createCaptureSession(
                                 Arrays.asList(surface1, surface2),
