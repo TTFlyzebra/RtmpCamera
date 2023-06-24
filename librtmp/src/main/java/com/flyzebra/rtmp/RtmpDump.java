@@ -11,33 +11,37 @@ public class RtmpDump {
     }
 
     private long pRtmpPointer = -1;
-    private String rtmp_url;
 
     public RtmpDump() {
     }
 
     public void init(String rtmp_url) {
-        this.rtmp_url = rtmp_url;
         pRtmpPointer = _init(rtmp_url);
     }
 
     public void release() {
-        _release(pRtmpPointer);
+        long pointer = pRtmpPointer;
+        pRtmpPointer = -1;
+        _release(pointer);
     }
 
     public void sendSpsPps(byte[] sps, int spsLen, byte[] pps, int ppsLen) {
+        if (pRtmpPointer == -1) return;
         _sendSpsPps(pRtmpPointer, sps, spsLen, pps, ppsLen);
     }
 
     public void sendVpsSpsPps(byte[] vsp, int vspLen, byte[] sps, int spsLen, byte[] pps, int ppsLen) {
+        if (pRtmpPointer == -1) return;
         _sendVpsSpsPps(pRtmpPointer, vsp, vspLen, sps, spsLen, pps, ppsLen);
     }
 
     public void sendAvc(byte[] data, int size, long pts) {
+        if (pRtmpPointer == -1) return;
         _sendAvc(pRtmpPointer, data, size, pts);
     }
 
     public void sendHevc(byte[] data, int size, long pts) {
+        if (pRtmpPointer == -1) return;
         _sendHevc(pRtmpPointer, data, size, pts);
     }
 

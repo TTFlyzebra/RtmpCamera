@@ -10,14 +10,43 @@
 #include "utils/FlyLog.h"
 #include "librtmp/rtmp.h"
 
-RtmpDump::RtmpDump(JavaVM *jvm, JNIEnv *env, jobject thiz)
+RtmpDump::RtmpDump(JavaVM *jvm, JNIEnv *env, jobject thiz, const char* url)
         : send_t(nullptr), rtmp(nullptr), is_connect(false),
           _vps(nullptr), _sps(nullptr), _pps(nullptr) {
     FLOGD("%s()", __func__);
+
+    memset(rtmp_url, 0, sizeof(rtmp_url));
+    memcpy(rtmp_url, url, strlen(url));
+
     callBack = new CallBack(jvm, env, thiz);
+    {
+        std::lock_guard<std::mutex> lock_stop(mlock_stop);
+        is_stop = false;
+    }
+    send_t = new std::thread(&RtmpDump::sendThread, this);
 }
 
 RtmpDump::~RtmpDump() {
+    {
+        std::lock_guard<std::mutex> lock_stop(mlock_stop);
+        is_stop = true;
+    }
+    {
+        std::lock_guard <std::mutex> lock(mlock_send);
+        while (!sendPackets.empty()) {
+            auto packet = sendPackets.front();
+            sendPackets.pop();
+            RTMPPacket_Free(packet);
+            free(packet);
+        }
+        mcond_send.notify_all();
+    }
+
+    if (send_t != nullptr) {
+        send_t->join();
+        send_t = nullptr;
+    }
+
     delete callBack;
     if (_vps) {
         free(_vps);
@@ -34,39 +63,6 @@ RtmpDump::~RtmpDump() {
     FLOGD("%s()", __func__);
 }
 
-void RtmpDump::init(const char *url) {
-    int len = strlen(url);
-    int size = sizeof(rtmp_url);
-    memset(rtmp_url, 0, sizeof(rtmp_url));
-    memcpy(rtmp_url, url, len);
-    FLOGD("RtmpDump set rtmp url to %s[%d]----%s[%d]", url, len, rtmp_url, size);
-    if (send_t != nullptr) {
-        is_stop = true;
-        send_t->join();
-        send_t = nullptr;
-    }
-    is_stop = false;
-    send_t = new std::thread(&RtmpDump::sendThread, this);
-}
-
-void RtmpDump::release() {
-    is_stop = true;
-    {
-        std::lock_guard<std::mutex> lock(mlock_send);
-        while (!sendPackets.empty()) {
-            auto packet = sendPackets.front();
-            sendPackets.pop();
-            RTMPPacket_Free(packet);
-            free(packet);
-        }
-        mcond_send.notify_all();
-    }
-    if (send_t != nullptr) {
-        send_t->join();
-        send_t = nullptr;
-    }
-}
-
 void RtmpDump::rtmpConnect() {
     rtmp = RTMP_Alloc();
     if (rtmp == nullptr) {
@@ -79,11 +75,10 @@ void RtmpDump::rtmpConnect() {
 
     char url[1024];
     sprintf(url, "%s", rtmp_url);
-    FLOGE("RTMP_SetupURL url=%s", url);
     int ret = RTMP_SetupURL(rtmp, url);
     if (ret == FALSE) {
         RTMP_Free(rtmp);
-        FLOGE("RTMP_SetupURL %s---%s ret=%d", rtmp_url, url, ret);
+        FLOGE("RTMP_SetupURL %s-%s failed. ret=%d", rtmp_url, url, ret);
         return;
     }
 
@@ -129,7 +124,7 @@ void RtmpDump::sendThread() {
             continue;
         }
         {
-            std::unique_lock<std::mutex> lock(mlock_send);
+            std::unique_lock <std::mutex> lock(mlock_send);
             while (!is_stop && sendPackets.empty()) {
                 mcond_send.wait(lock);
             }
@@ -145,28 +140,37 @@ void RtmpDump::sendThread() {
             if (ret == TRUE) is_sendheader = true;
         }
 
-        auto packet = sendPackets.front();
-        sendPackets.pop();
+        RTMPPacket* packet = nullptr;
+        {
+            std::lock_guard <std::mutex> lock(mlock_send);
+            packet = sendPackets.front();
+            sendPackets.pop();
+        }
         ret = RTMP_SendPacket(rtmp, packet, 0);
         RTMPPacket_Free(packet);
         free(packet);
+
         if (ret == TRUE) {
-            FLOGD("RTMP_SendPacket ok, ret = %d", ret);
             continue;
         }
 
         FLOGE("RTMP_SendPacket failed, ret = %d", ret);
         rtmpDisconnect();
-        while (!sendPackets.empty()) {
-            auto packet = sendPackets.front();
-            sendPackets.pop();
-            RTMPPacket_Free(packet);
-            free(packet);
+        {
+            std::lock_guard <std::mutex> lock(mlock_send);
+            while (!sendPackets.empty()) {
+                auto packet = sendPackets.front();
+                sendPackets.pop();
+                RTMPPacket_Free(packet);
+                free(packet);
+            }
         }
     }
 }
 
 void RtmpDump::sendSpsPps(const char *sps, int sps_len, const char *pps, int pps_len) {
+    std::lock_guard<std::mutex> lock_stop(mlock_stop);
+    if(is_stop) return;
     _sps = static_cast<char *>(malloc(sps_len * sizeof(char)));
     spsLen = sps_len;
     memcpy(_sps, sps, spsLen);
@@ -222,6 +226,8 @@ int RtmpDump::_sendSpsPps(const char *sps, int sps_len, const char *pps, int pps
 
 void RtmpDump::sendVpsSpsPps(const char *vps, int vps_len, const char *sps, int sps_len,
                              const char *pps, int pps_len) {
+    std::lock_guard<std::mutex> lock_stop(mlock_stop);
+    if(is_stop) return;
     _vps = static_cast<char *>(malloc(vps_len * sizeof(char)));
     vpsLen = vps_len;
     memcpy(_vps, vps, vpsLen);
@@ -316,7 +322,8 @@ int RtmpDump::_sendVpsSpsPps(const char *vps, int vps_len, const char *sps, int 
 }
 
 void RtmpDump::sendAvc(const char *data, int size, long pts) {
-    unsigned long long rpts = pts;
+    std::lock_guard<std::mutex> lock_stop(mlock_stop);
+    if(is_stop) return;
     RTMPPacket *packet = static_cast<RTMPPacket *>(malloc(sizeof(RTMPPacket)));
     RTMPPacket_Reset(packet);
     int ret = RTMPPacket_Alloc(packet, 9 + size);
@@ -327,7 +334,7 @@ void RtmpDump::sendAvc(const char *data, int size, long pts) {
     packet->m_packetType = RTMP_PACKET_TYPE_VIDEO;
     packet->m_nBodySize = 9 + size;
     packet->m_nChannel = 0x04;
-    packet->m_nTimeStamp = rpts / 1000;
+    packet->m_nTimeStamp = pts;
     packet->m_hasAbsTimestamp = 0;
     packet->m_headerType = RTMP_PACKET_SIZE_MEDIUM;
     //packet->m_nInfoField2 	= rtmp->m_stream_id;
@@ -336,14 +343,15 @@ void RtmpDump::sendAvc(const char *data, int size, long pts) {
     AMF_EncodeInt32(packet->m_body + 5, packet->m_body + 9, size);
     memcpy(packet->m_body + 9, data, size);
     {
-        std::lock_guard<std::mutex> lock(mlock_send);
+        std::lock_guard <std::mutex> lock(mlock_send);
         sendPackets.push(packet);
         mcond_send.notify_one();
     }
 }
 
 void RtmpDump::sendHevc(const char *data, int size, long pts) {
-    unsigned long long rpts = pts;
+    std::lock_guard<std::mutex> lock_stop(mlock_stop);
+    if(is_stop) return;
     RTMPPacket *packet = static_cast<RTMPPacket *>(malloc(sizeof(RTMPPacket)));
     RTMPPacket_Reset(packet);
     int ret = RTMPPacket_Alloc(packet, 9 + size);
@@ -355,7 +363,7 @@ void RtmpDump::sendHevc(const char *data, int size, long pts) {
     packet->m_packetType = RTMP_PACKET_TYPE_VIDEO;
     packet->m_nBodySize = 9 + size;
     packet->m_nChannel = 0x04;
-    packet->m_nTimeStamp = rpts / 1000;
+    packet->m_nTimeStamp = pts;
     packet->m_hasAbsTimestamp = 0;
     packet->m_headerType = RTMP_PACKET_SIZE_MEDIUM;
     //packet->m_nInfoField2 = rtmp->m_stream_id;
@@ -376,7 +384,7 @@ void RtmpDump::sendHevc(const char *data, int size, long pts) {
     memcpy(&packet->m_body[i], data, size);
 
     {
-        std::lock_guard<std::mutex> lock(mlock_send);
+        std::lock_guard <std::mutex> lock(mlock_send);
         sendPackets.push(packet);
         mcond_send.notify_one();
     }

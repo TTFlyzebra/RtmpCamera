@@ -17,18 +17,13 @@ class RTMPPacket;
 
 class RtmpDump {
 public:
-    RtmpDump(JavaVM *jvm, JNIEnv *env, jobject thiz);
+    RtmpDump(JavaVM *jvm, JNIEnv *env, jobject thiz, const char* url);
 
     ~RtmpDump();
 
-    void init(const char *url);
-
-    void release();
-
     void sendSpsPps(const char *sps, int spsLen, const char *pps, int ppsLen);
 
-    void sendVpsSpsPps(const char *vps, int vpsLen, const char *sps, int spsLen, const char *pps,
-                       int ppsLen);
+    void sendVpsSpsPps(const char *vps, int vpsLen, const char *sps, int spsLen, const char *pps, int ppsLen);
 
     void sendAvc(const char *data, int size, long pts);
 
@@ -43,12 +38,14 @@ private:
 
     int _sendSpsPps(const char *sps, int spsLen, const char *pps, int ppsLen);
 
-    int _sendVpsSpsPps(const char *vps, int vpsLen, const char *sps, int spsLen, const char *pps,
-                       int ppsLen);
+    int _sendVpsSpsPps(const char *vps, int vpsLen, const char *sps, int spsLen, const char *pps, int ppsLen);
 
 private:
-    CallBack *callBack;
     bool is_stop;
+    std::mutex mlock_stop;
+
+    CallBack *callBack;
+
     char rtmp_url[1024];
     std::thread *send_t;
     std::mutex mlock_send;
@@ -57,6 +54,7 @@ private:
 
     RTMP *rtmp;
     bool is_connect;
+
     char* _vps;
     int vpsLen;
     char* _sps;
