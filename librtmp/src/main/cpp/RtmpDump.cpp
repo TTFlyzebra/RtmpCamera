@@ -207,31 +207,33 @@ int RtmpDump::_sendSpsPps(const char *sps, int sps_len, const char *pps, int pps
     packet->m_hasAbsTimestamp = 0;
     packet->m_headerType = RTMP_PACKET_SIZE_LARGE;
     //packet->m_nInfoField2 = rtmp->m_stream_id;
-    unsigned char *body = (unsigned char *) packet->m_body;
     int i = 0;
-    body[i++] = 0x17;
-    body[i++] = 0x00;
-    body[i++] = 0x00;
-    body[i++] = 0x00;
-    body[i++] = 0x00;
+    packet->m_body[i++] = 0x17;
+    packet->m_body[i++] = 0x00;
+    packet->m_body[i++] = 0x00;
+    packet->m_body[i++] = 0x00;
+    packet->m_body[i++] = 0x00;
     //AVCDecoderConfigurationRecord
-    body[i++] = 0x01;
-    body[i++] = sps[1];
-    body[i++] = sps[2];
-    body[i++] = sps[3];
-    body[i++] = 0xff;
+    packet->m_body[i++] = 0x01;
+    packet->m_body[i++] = sps[1];
+    packet->m_body[i++] = sps[2];
+    packet->m_body[i++] = sps[3];
+    packet->m_body[i++] = 0xff;
     //sps
-    body[i++] = 0xe1;
-    body[i++] = (sps_len >> 8) & 0xff;
-    body[i++] = (sps_len) & 0xff;
-    memcpy(body + i, sps, sps_len);
+    packet->m_body[i++] = 0xe1;
+    packet->m_body[i++] = (sps_len >> 8) & 0xff;
+    packet->m_body[i++] = (sps_len) & 0xff;
+    memcpy(packet->m_body + i, sps, sps_len);
     i += sps_len;
     //pps
-    body[i++] = 0x01;
-    body[i++] = (pps_len >> 8) & 0xff;
-    body[i++] = (pps_len) & 0xff;
-    memcpy(body + i, pps, pps_len);
+    packet->m_body[i++] = 0x01;
+    packet->m_body[i++] = (pps_len >> 8) & 0xff;
+    packet->m_body[i++] = (pps_len) & 0xff;
+    memcpy(packet->m_body + i, pps, pps_len);
     ret = RTMP_SendPacket(rtmp, packet, 0);
+    if(ret == FALSE){
+        FLOGE("_sendSpsPps failed!");
+    }
     RTMPPacket_Free(packet);
     free(packet);
     return ret;
@@ -262,65 +264,64 @@ int RtmpDump::_sendVpsSpsPps(const char *vps, int vps_len, const char *sps, int 
         return FALSE;
     }
     //packet->m_nInfoField2 = rtmp->m_stream_id;
-    char *body = (char *) packet->m_body;
     int i = 0;
-    body[i++] = 0x1c;
-    body[i++] = 0x00;
-    body[i++] = 0x00;
-    body[i++] = 0x00;
-    body[i++] = 0x00;
-    body[i++] = 0x01;
-    body[i++] = sps[6];
-    body[i++] = sps[7];
-    body[i++] = sps[8];
-    body[i++] = sps[9];
-    body[i++] = sps[12];
-    body[i++] = sps[13];
-    body[i++] = sps[14];
+    packet->m_body[i++] = 0x1c;
+    packet->m_body[i++] = 0x00;
+    packet->m_body[i++] = 0x00;
+    packet->m_body[i++] = 0x00;
+    packet->m_body[i++] = 0x00;
+    packet->m_body[i++] = 0x01;
+    packet->m_body[i++] = sps[6];
+    packet->m_body[i++] = sps[7];
+    packet->m_body[i++] = sps[8];
+    packet->m_body[i++] = sps[9];
+    packet->m_body[i++] = sps[12];
+    packet->m_body[i++] = sps[13];
+    packet->m_body[i++] = sps[14];
     //48 bit nothing deal in rtmp
-    body[i++] = 0x00;
-    body[i++] = 0x00;
-    body[i++] = 0x00;
-    body[i++] = 0x00;
-    body[i++] = 0x00;
-    body[i++] = 0x00;
-    body[i++] = 0x00;
-    body[i++] = 0x00;
-    body[i++] = 0x00;
-    body[i++] = 0x00;
-    body[i++] = 0x00;
-    body[i++] = 0x00;
-    body[i++] = 0x00;
+    packet->m_body[i++] = 0x00;
+    packet->m_body[i++] = 0x00;
+    packet->m_body[i++] = 0x00;
+    packet->m_body[i++] = 0x00;
+    packet->m_body[i++] = 0x00;
+    packet->m_body[i++] = 0x00;
+    packet->m_body[i++] = 0x00;
+    packet->m_body[i++] = 0x00;
+    packet->m_body[i++] = 0x00;
+    packet->m_body[i++] = 0x00;
+    packet->m_body[i++] = 0x00;
+    packet->m_body[i++] = 0x00;
+    packet->m_body[i++] = 0x00;
     //bit(16) avgFrameRate
     /* bit(2) constantFrameRate; */
     /* bit(3) numTemporalLayers; */
     /* bit(1) temporalIdNested; */
-    body[i++] = 0x83;
+    packet->m_body[i++] = 0x83;
     /*unsigned int(8) numOfArrays; 03*/
-    body[i++] = 0x03;
+    packet->m_body[i++] = 0x03;
     //vps 32
-    body[i++] = 0x20;
-    body[i++] = 0x00;
-    body[i++] = 0x01;
-    body[i++] = (vps_len >> 8) & 0xff;
-    body[i++] = (vps_len) & 0xff;
-    memcpy(&body[i], vps, vps_len);
+    packet->m_body[i++] = 0x20;
+    packet->m_body[i++] = 0x00;
+    packet->m_body[i++] = 0x01;
+    packet->m_body[i++] = (vps_len >> 8) & 0xff;
+    packet->m_body[i++] = (vps_len) & 0xff;
+    memcpy(&packet->m_body[i], vps, vps_len);
     i += vps_len;
     //sps
-    body[i++] = 0x21;
-    body[i++] = 0x00;
-    body[i++] = 0x01;
-    body[i++] = (sps_len >> 8) & 0xff;
-    body[i++] = (sps_len) & 0xff;
-    memcpy(&body[i], sps, sps_len);
+    packet->m_body[i++] = 0x21;
+    packet->m_body[i++] = 0x00;
+    packet->m_body[i++] = 0x01;
+    packet->m_body[i++] = (sps_len >> 8) & 0xff;
+    packet->m_body[i++] = (sps_len) & 0xff;
+    memcpy(&packet->m_body[i], sps, sps_len);
     i += sps_len;
     //pps
-    body[i++] = 0x22;
-    body[i++] = 0x00;
-    body[i++] = 0x01;
-    body[i++] = (pps_len >> 8) & 0xff;
-    body[i++] = (pps_len) & 0xff;
-    memcpy(&body[i], pps, pps_len);
+    packet->m_body[i++] = 0x22;
+    packet->m_body[i++] = 0x00;
+    packet->m_body[i++] = 0x01;
+    packet->m_body[i++] = (pps_len >> 8) & 0xff;
+    packet->m_body[i++] = (pps_len) & 0xff;
+    memcpy(&packet->m_body[i], pps, pps_len);
     i += pps_len;
     packet->m_packetType = RTMP_PACKET_TYPE_VIDEO;
     packet->m_nBodySize = i;
@@ -329,6 +330,9 @@ int RtmpDump::_sendVpsSpsPps(const char *vps, int vps_len, const char *sps, int 
     packet->m_hasAbsTimestamp = 0;
     packet->m_headerType = RTMP_PACKET_SIZE_LARGE;
     ret = RTMP_SendPacket(rtmp, packet, 0);
+    if(ret == FALSE){
+        FLOGE("_sendVpsSpsPps failed!");
+    }
     RTMPPacket_Free(packet);
     free(packet);
     return ret;
@@ -437,6 +441,9 @@ int RtmpDump::_sendAacHead(const char *head, int headLen) {
     packet->m_nTimeStamp = 0;
     packet->m_headerType = RTMP_PACKET_SIZE_MEDIUM;
     ret = RTMP_SendPacket(rtmp, packet, 0);
+    if(ret == FALSE){
+        FLOGE("_sendAacHead failed!");
+    }
     RTMPPacket_Free(packet);
     free(packet);
     return ret;
