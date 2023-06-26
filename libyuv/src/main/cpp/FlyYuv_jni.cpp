@@ -126,3 +126,15 @@ Java_com_flyzebra_libyuv_FlyYuv_I422ToI420(JNIEnv *env, jclass thiz, jbyteArray 
     env->ReleaseByteArrayElements(jsrc, reinterpret_cast<jbyte *>(src), JNI_ABORT);
     env->ReleaseByteArrayElements(jdst, reinterpret_cast<jbyte *>(dst), JNI_ABORT);
 }
+
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_flyzebra_libyuv_FlyYuv_I420Rotate(JNIEnv *env, jclass clazz, jbyteArray jsrc,
+                                           jbyteArray jdst, jint dst_offset, jint width, jint height) {
+    auto *src = (unsigned char *) env->GetByteArrayElements(jsrc, JNI_FALSE);
+    auto *dst = (unsigned char *) env->GetByteArrayElements(jdst, JNI_FALSE);
+    FlyYuv::I420Rotate(src, dst, dst_offset, width, height);
+    env->ReleaseByteArrayElements(jsrc, reinterpret_cast<jbyte *>(src), JNI_ABORT);
+    env->ReleaseByteArrayElements(jdst, reinterpret_cast<jbyte *>(dst), JNI_ABORT);
+}

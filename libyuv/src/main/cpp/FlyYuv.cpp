@@ -135,3 +135,22 @@ FlyYuv::I422ToI420(unsigned char *src, unsigned char *dst, int dst_offset, int w
                        height);
 }
 
+void
+FlyYuv::I420Rotate(unsigned char *src, unsigned char *dst, int dst_offset, int width, int height) {
+    libyuv::I420Rotate(src,
+                       width,
+                       src + width * height,
+                       (width + 1) / 2,
+                       src + width * height + width * height / 4,
+                       (width + 1) / 2,
+                       dst + dst_offset,
+                       width,
+                       dst + dst_offset + width * height,
+                       (width + 1) / 2,
+                       dst + dst_offset + width * height + width * height / 4,
+                       (width + 1) / 2,
+                       width,
+                       height,
+                       libyuv::kRotate90);
+}
+

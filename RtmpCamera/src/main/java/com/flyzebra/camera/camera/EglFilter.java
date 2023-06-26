@@ -83,7 +83,7 @@ public class EglFilter {
 
         System.arraycopy(vMatrixBase, 0, vMatrixData, 0, vMatrixBase.length);
 
-        isMirror.set(EglCamera.cameraID.endsWith("1"));
+        isMirror.set(SimpleCamera.cameraID.endsWith("1"));
         if (isMirror.get()) Matrix.scaleM(vMatrixData, 0, 1f, -1f, 1f);
 
         GLES30.glActiveTexture(GLES30.GL_TEXTURE0);

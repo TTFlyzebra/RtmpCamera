@@ -33,6 +33,9 @@ public:
 
     static void
     I422ToI420(unsigned char *src, unsigned char *dst, int dst_offset, int width, int height);
+
+    static void
+    I420Rotate(unsigned char *src, unsigned char *dst, int offset, int width, int height);
 };
 
 

@@ -34,7 +34,7 @@ public class VideoEncoder implements Runnable {
     public void initCodec(String mimeType, int width, int height, int bitrate) {
         synchronized (codecLock) {
             try {
-                MediaFormat format = MediaFormat.createVideoFormat(mimeType, width, height);
+                MediaFormat format = MediaFormat.createVideoFormat(mimeType, height, width);
                 format.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar);
                 format.setInteger(MediaFormat.KEY_BIT_RATE, bitrate);
                 format.setInteger(MediaFormat.KEY_FRAME_RATE, 25);

@@ -14,7 +14,7 @@ import com.flyzebra.camera.Config;
 import com.flyzebra.camera.R;
 import com.flyzebra.camera.audio.AudioRocoder;
 import com.flyzebra.camera.audio.IAudioListener;
-import com.flyzebra.camera.camera.EglCamera;
+import com.flyzebra.camera.camera.SimpleCamera;
 import com.flyzebra.camera.camera.IVideoListener;
 import com.flyzebra.camera.service.RtmpusherService;
 import com.flyzebra.notify.Notify;
@@ -29,7 +29,7 @@ public class CameraActivity extends AppCompatActivity implements
         IAudioListener {
     private TextureView mTextureView;
     private EditText et_rtmpurl;
-    private EglCamera mEglCamera;
+    private SimpleCamera mSimpleCamera;
     private AudioRocoder mAudioRocoder;
     private RtmpusherService rtmpPushService;
 
@@ -46,8 +46,8 @@ public class CameraActivity extends AppCompatActivity implements
         et_rtmpurl.setText(rtmp_rul);
         rtmpPushService.start(rtmp_rul);
 
-        mEglCamera = new EglCamera(this, mTextureView, Config.CAM_W, Config.CAM_H);
-        mEglCamera.addFrameListener(this);
+        mSimpleCamera = new SimpleCamera(this, mTextureView, Config.CAM_W, Config.CAM_H);
+        mSimpleCamera.addFrameListener(this);
         mAudioRocoder = new AudioRocoder(this, Config.MIC_SAMPLE, Config.MIC_CHANNEL, Config.MIC_FORMAT);
         mAudioRocoder.addFrameListener(this);
 
@@ -56,7 +56,7 @@ public class CameraActivity extends AppCompatActivity implements
 
     @Override
     protected void onDestroy() {
-        mEglCamera.removeFrameListener(this);
+        mSimpleCamera.removeFrameListener(this);
         mAudioRocoder.removeFrameListener(this);
         rtmpPushService.stop();
         super.onDestroy();
@@ -64,10 +64,10 @@ public class CameraActivity extends AppCompatActivity implements
     }
 
     public void switchCamera(View view) {
-        if (mEglCamera != null) {
+        if (mSimpleCamera != null) {
             String rtmp_url = et_rtmpurl.getText().toString();
             SPUtil.set(this, Config.RTMP_KEY, rtmp_url);
-            mEglCamera.swapCamera();
+            mSimpleCamera.swapCamera();
             rtmpPushService.stop();
             rtmpPushService.start(rtmp_url);
         }
@@ -75,7 +75,7 @@ public class CameraActivity extends AppCompatActivity implements
 
     @Override
     public void onSurfaceTextureAvailable(@NonNull SurfaceTexture surface, int width, int height) {
-        mEglCamera.openCamera();
+        mSimpleCamera.openCamera();
         mAudioRocoder.start();
     }
 
@@ -86,7 +86,7 @@ public class CameraActivity extends AppCompatActivity implements
 
     @Override
     public boolean onSurfaceTextureDestroyed(@NonNull SurfaceTexture surface) {
-        mEglCamera.closeCamera();
+        mSimpleCamera.closeCamera();
         mAudioRocoder.stop();
         return false;
     }
@@ -97,7 +97,8 @@ public class CameraActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void notifyRGBFrame(byte[] data, int size, int width, int heigth) {
+    public void notifyNv21Frame(byte[] data, int size, int width, int heigth) {
+        FlyLog.e("notifyNv21Frame[%d]:%s", size, ByteUtil.bytes2HexString(data, 20));
         byte[] params = new byte[4];
         ByteUtil.shortToBytes((short) width, params, 0, true);
         ByteUtil.shortToBytes((short) heigth, params, 2, true);

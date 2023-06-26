@@ -10,6 +10,7 @@ package com.flyzebra.camera.camera;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -20,6 +21,8 @@ import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.media.Image;
+import android.media.ImageReader;
 import android.opengl.GLES30;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -40,8 +43,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
 
-public class EglCamera{
+public class SimpleCamera {
     private Context mContext;
     private TextureView mTextureView;
     private int cam_w = 720;
@@ -59,31 +63,30 @@ public class EglCamera{
     private CameraDevice mCameraDevice;
     private HandlerThread mCamThread;
     private Handler mCamBkHandler;
-    private EglGLSurface mEglGLSurface;
-    private AtomicBoolean is_opened = new AtomicBoolean(false);
-    private static final Object mFrameLock = new Object();
-    private Thread wFrameThread;
+    private ImageReader mImageReader = null;
 
-    public EglCamera(Context context, TextureView textureView, int width, int height) {
+    public SimpleCamera(Context context, TextureView textureView, int width, int height) {
         mContext = context;
         mTextureView = textureView;
         cam_w = width;
         cam_h = height;
         nv21 = new byte[cam_w * cam_h * 3 / 2];
-        frameRGBA = ByteBuffer.wrap(new byte[cam_w * cam_h * 4]);
+        frameRGBA = ByteBuffer.wrap(nv21);
 
         mCamThread = new HandlerThread("camera2");
         mCamThread.start();
         mCamBkHandler = new Handler(mCamThread.getLooper());
         mCameraManager = (CameraManager) mContext.getSystemService(Context.CAMERA_SERVICE);
         cameraID = (String) SPUtil.get(mContext, CAMERA_ID_KEY, "0");
-        mEglGLSurface = new EglGLSurface(mContext, this);
+
     }
 
     public void openCamera() {
         if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
             return;
         try {
+            mImageReader = ImageReader.newInstance(cam_w, cam_h, ImageFormat.YUV_420_888, 1);
+            mImageReader.setOnImageAvailableListener(new OnImageAvailableListenerImpl(cam_w, cam_h), mCamBkHandler);
             mCameraManager.openCamera(cameraID, new CameraDevice.StateCallback() {
                 @Override
                 public void onOpened(CameraDevice camera) {
@@ -113,11 +116,9 @@ public class EglCamera{
                         }
                         //FlyLog.d("Camera width=%d, height=%d", mSize.getWidth(), mSize.getHeight());
                         mBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
-                        SurfaceTexture surfaceTexture1 = mEglGLSurface.getSurfaceTexture();
                         SurfaceTexture surfaceTexture2 = mTextureView.getSurfaceTexture();
-                        surfaceTexture1.setDefaultBufferSize(mSize.getWidth(), mSize.getHeight());
                         surfaceTexture2.setDefaultBufferSize(mSize.getWidth(), mSize.getHeight());
-                        Surface surface1 = new Surface(surfaceTexture1);
+                        Surface surface1 = mImageReader.getSurface();
                         Surface surface2 = new Surface(surfaceTexture2);
                         mBuilder.addTarget(surface1);
                         mBuilder.addTarget(surface2);
@@ -139,7 +140,6 @@ public class EglCamera{
                                                         @Override
                                                         public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
                                                             super.onCaptureCompleted(session, request, result);
-                                                            mEglGLSurface.requestRender();
                                                         }
                                                     }, mCamBkHandler);
                                         } catch (CameraAccessException e1) {
@@ -155,7 +155,6 @@ public class EglCamera{
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    mEglGLSurface.create();
                 }
 
                 @Override
@@ -171,53 +170,16 @@ public class EglCamera{
         } catch (Exception e) {
             FlyLog.e(e.toString());
         }
-
-        is_opened.set(true);
-
-        wFrameThread = new Thread(() -> {
-            while (is_opened.get()) {
-                synchronized (mFrameLock) {
-                    try {
-                        mFrameLock.wait();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-                if (!is_opened.get()) return;
-                FlyYuv.ARGBToNV21(
-                        frameRGBA.array(),
-                        nv21,
-                        0,
-                        cam_w,
-                        cam_h);
-                for (IVideoListener listener : listeners) {
-                    listener.notifyNv21Frame(nv21, nv21.length, cam_w, cam_h);
-                }
-            }
-        }, "frame_thread");
-        wFrameThread.start();
     }
 
     public void closeCamera() {
-        is_opened.set(false);
-        synchronized (mFrameLock) {
-            mFrameLock.notifyAll();
+        if (mCameraDevice != null) {
+            mCameraDevice.close();
         }
-        try {
-            wFrameThread.join();
-            wFrameThread = null;
-        } catch (InterruptedException e) {
-            FlyLog.e(e.toString());
+        if (mImageReader != null) {
+            mImageReader.close();
+            mImageReader = null;
         }
-
-        try {
-            if (mCameraDevice != null) {
-                mCameraDevice.close();
-            }
-        } catch (Exception e) {
-            FlyLog.e(e.toString());
-        }
-        mEglGLSurface.destory();
     }
 
     public void swapCamera() {
@@ -227,12 +189,61 @@ public class EglCamera{
         openCamera();
     }
 
-    public void upRenderData() {
-        if (frameRGBA != null) {
-            GLES30.glReadPixels(0, 0, cam_w, cam_h, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, frameRGBA);
-            synchronized (mFrameLock) {
-                mFrameLock.notify();
+    private class OnImageAvailableListenerImpl implements ImageReader.OnImageAvailableListener {
+        private int width;
+        private int height;
+        private byte[] yy;
+        private byte[] uu;
+        private byte[] vv;
+        private ByteBuffer nv21Buffer;
+        private final ReentrantLock lock = new ReentrantLock();
+
+        public OnImageAvailableListenerImpl(int width, int height) {
+            this.width = width;
+            this.height = height;
+            yy = new byte[width * height];
+            uu = new byte[width * height / 2];
+            vv = new byte[width * height / 2];
+            nv21Buffer = ByteBuffer.wrap(new byte[width * height * 3 / 2]);
+        }
+
+        @Override
+        public void onImageAvailable(ImageReader reader) {
+            Image image = reader.acquireNextImage();
+            if (image.getFormat() == ImageFormat.YUV_420_888) {
+                Image.Plane[] planes = image.getPlanes();
+                lock.lock();
+                int yL = planes[0].getBuffer().limit() - planes[0].getBuffer().position();
+                int uL = planes[1].getBuffer().limit() - planes[1].getBuffer().position();
+                int vL = planes[2].getBuffer().limit() - planes[2].getBuffer().position();
+                if (image.getPlanes()[0].getBuffer().remaining() == yL) {
+                    planes[0].getBuffer().get(yy, 0, yL);
+                    planes[1].getBuffer().get(uu, 0, uL);
+                    planes[2].getBuffer().get(vv, 0, vL);
+                }
+                nv21Buffer.clear();
+                if (yy.length / uu.length == 4) {
+                    ((ByteBuffer) nv21Buffer).put(yy, 0, yy.length);
+                    ((ByteBuffer) nv21Buffer).put(uu, 0, uu.length);
+                    ((ByteBuffer) nv21Buffer).put(vv, 0, vv.length);
+                } else if (yy.length / uu.length == 2) {
+                    ((ByteBuffer) nv21Buffer).put(yy, 0, yy.length);
+                    int length = yy.length + uu.length / 2 + vv.length / 2;
+                    int index = 0;
+                    for (int i = yy.length; i < length; i += 2) {
+                        ((ByteBuffer) nv21Buffer).put(uu[index]);
+                        ((ByteBuffer) nv21Buffer).put(vv[index]);
+                        index += 2;
+                    }
+                }
+                for (IVideoListener listener : listeners) {
+                    //byte[] temp = new byte[width * height * 3 / 2];
+                    //FlyYuv.I420Rotate(nv21Buffer.array(), temp, 0, width, height);
+                    listener.notifyNv21Frame(nv21Buffer.array(), width * height * 3 / 2, width, height);
+                }
+                lock.unlock();
             }
+            image.close();
         }
     }
 

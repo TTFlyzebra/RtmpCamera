@@ -351,7 +351,7 @@ void RtmpDump::sendAvc(const char *data, int size, long pts) {
     packet->m_packetType = RTMP_PACKET_TYPE_VIDEO;
     packet->m_nBodySize = 9 + size;
     packet->m_nChannel = 0x04;
-    packet->m_nTimeStamp = pts;
+    packet->m_nTimeStamp = pts / 1000;
     packet->m_hasAbsTimestamp = 0;
     packet->m_headerType = RTMP_PACKET_SIZE_MEDIUM;
     //packet->m_nInfoField2 	= rtmp->m_stream_id;
@@ -380,7 +380,7 @@ void RtmpDump::sendHevc(const char *data, int size, long pts) {
     packet->m_packetType = RTMP_PACKET_TYPE_VIDEO;
     packet->m_nBodySize = 9 + size;
     packet->m_nChannel = 0x04;
-    packet->m_nTimeStamp = pts;
+    packet->m_nTimeStamp = pts / 1000;
     packet->m_hasAbsTimestamp = 0;
     packet->m_headerType = RTMP_PACKET_SIZE_MEDIUM;
     //packet->m_nInfoField2 = rtmp->m_stream_id;
@@ -473,7 +473,7 @@ void RtmpDump::sendAac(const char *data, int size, long pts) {
     packet->m_packetType = RTMP_PACKET_TYPE_AUDIO;
     packet->m_nBodySize = bodySize;
     packet->m_nChannel = 0x05;
-    packet->m_hasAbsTimestamp = pts;
+    packet->m_hasAbsTimestamp = pts / 1000;
     packet->m_nTimeStamp = 0;
     packet->m_headerType = RTMP_PACKET_SIZE_LARGE;
 

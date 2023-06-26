@@ -29,4 +29,6 @@ public class FlyYuv {
 
     static public native void I422ToI420(byte[] src, byte[] dst, int dst_offset, int width, int height);
 
+    static public native void I420Rotate(byte[] src, byte[] dst, int dst_offset, int width, int height);
+
 }

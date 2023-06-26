@@ -1,5 +1,5 @@
 package com.flyzebra.camera.camera;
 
 public interface IVideoListener {
-    void notifyRGBFrame(byte[] data, int size, int width, int heigth);
+    void notifyNv21Frame(byte[] data, int size, int width, int heigth);
 }
