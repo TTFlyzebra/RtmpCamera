@@ -23,7 +23,6 @@ import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
-import android.opengl.GLES30;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Size;
@@ -34,29 +33,21 @@ import android.view.TextureView;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 
-import com.flyzebra.libyuv.FlyYuv;
 import com.flyzebra.utils.FlyLog;
 import com.flyzebra.utils.SPUtil;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class SimpleCamera {
     private Context mContext;
     private TextureView mTextureView;
-    private int cam_w = 720;
-    private int cam_h = 1280;
-
-    private ByteBuffer frameRGBA;
-    private byte[] nv21;
-
+    private int cam_w = 1280;
+    private int cam_h = 720;
     private final String CAMERA_ID_KEY = "CAMERA_ID_KEY";
     public static String cameraID = "0";
-
     private CameraManager mCameraManager;
     private CaptureRequest.Builder mBuilder;
     private CameraCaptureSession mCaptureSession;
@@ -70,8 +61,6 @@ public class SimpleCamera {
         mTextureView = textureView;
         cam_w = width;
         cam_h = height;
-        nv21 = new byte[cam_w * cam_h * 3 / 2];
-        frameRGBA = ByteBuffer.wrap(nv21);
 
         mCamThread = new HandlerThread("camera2");
         mCamThread.start();
@@ -192,19 +181,13 @@ public class SimpleCamera {
     private class OnImageAvailableListenerImpl implements ImageReader.OnImageAvailableListener {
         private int width;
         private int height;
-        private byte[] yy;
-        private byte[] uu;
-        private byte[] vv;
-        private ByteBuffer nv21Buffer;
+        private byte[] yuv;
         private final ReentrantLock lock = new ReentrantLock();
 
         public OnImageAvailableListenerImpl(int width, int height) {
             this.width = width;
             this.height = height;
-            yy = new byte[width * height];
-            uu = new byte[width * height / 2];
-            vv = new byte[width * height / 2];
-            nv21Buffer = ByteBuffer.wrap(new byte[width * height * 3 / 2]);
+            yuv = new byte[width * height * 3 / 2];
         }
 
         @Override
@@ -213,33 +196,25 @@ public class SimpleCamera {
             if (image.getFormat() == ImageFormat.YUV_420_888) {
                 Image.Plane[] planes = image.getPlanes();
                 lock.lock();
-                int yL = planes[0].getBuffer().limit() - planes[0].getBuffer().position();
-                int uL = planes[1].getBuffer().limit() - planes[1].getBuffer().position();
-                int vL = planes[2].getBuffer().limit() - planes[2].getBuffer().position();
-                if (image.getPlanes()[0].getBuffer().remaining() == yL) {
-                    planes[0].getBuffer().get(yy, 0, yL);
-                    planes[1].getBuffer().get(uu, 0, uL);
-                    planes[2].getBuffer().get(vv, 0, vL);
-                }
-                nv21Buffer.clear();
-                if (yy.length / uu.length == 4) {
-                    ((ByteBuffer) nv21Buffer).put(yy, 0, yy.length);
-                    ((ByteBuffer) nv21Buffer).put(uu, 0, uu.length);
-                    ((ByteBuffer) nv21Buffer).put(vv, 0, vv.length);
-                } else if (yy.length / uu.length == 2) {
-                    ((ByteBuffer) nv21Buffer).put(yy, 0, yy.length);
-                    int length = yy.length + uu.length / 2 + vv.length / 2;
-                    int index = 0;
-                    for (int i = yy.length; i < length; i += 2) {
-                        ((ByteBuffer) nv21Buffer).put(uu[index]);
-                        ((ByteBuffer) nv21Buffer).put(vv[index]);
-                        index += 2;
-                    }
+                if (planes[1].getPixelStride() == 1) {
+                    //yuv
+                    int yLen = planes[0].getBuffer().remaining();
+                    int uLen = planes[1].getBuffer().remaining();
+                    int vLen = planes[2].getBuffer().remaining();
+                    planes[0].getBuffer().get(yuv, 0, yLen);
+                    planes[1].getBuffer().get(yuv, yLen, uLen);
+                    planes[2].getBuffer().get(yuv, yLen + uLen, vLen);
+                } else {
+                    //nv12 or nv21
+                    int yLen = planes[0].getBuffer().remaining();
+                    int uLen = planes[1].getBuffer().remaining();
+                    int vLen = planes[2].getBuffer().remaining();
+                    planes[0].getBuffer().get(yuv, 0, yLen);
+                    planes[1].getBuffer().get(yuv, yLen, uLen); //nv12
+                    //planes[2].getBuffer().get(yuv, yLen, vLen); //nv21
                 }
                 for (IVideoListener listener : listeners) {
-                    //byte[] temp = new byte[width * height * 3 / 2];
-                    //FlyYuv.I420Rotate(nv21Buffer.array(), temp, 0, width, height);
-                    listener.notifyNv21Frame(nv21Buffer.array(), width * height * 3 / 2, width, height);
+                    listener.notifyNv21Frame(yuv, width * height * 3 / 2, width, height);
                 }
                 lock.unlock();
             }

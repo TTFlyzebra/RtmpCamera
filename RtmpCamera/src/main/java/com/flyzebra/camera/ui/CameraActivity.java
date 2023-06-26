@@ -14,8 +14,8 @@ import com.flyzebra.camera.Config;
 import com.flyzebra.camera.R;
 import com.flyzebra.camera.audio.AudioRocoder;
 import com.flyzebra.camera.audio.IAudioListener;
-import com.flyzebra.camera.camera.SimpleCamera;
 import com.flyzebra.camera.camera.IVideoListener;
+import com.flyzebra.camera.camera.SimpleCamera;
 import com.flyzebra.camera.service.RtmpusherService;
 import com.flyzebra.notify.Notify;
 import com.flyzebra.notify.NotifyType;
@@ -98,7 +98,6 @@ public class CameraActivity extends AppCompatActivity implements
 
     @Override
     public void notifyNv21Frame(byte[] data, int size, int width, int heigth) {
-        FlyLog.e("notifyNv21Frame[%d]:%s", size, ByteUtil.bytes2HexString(data, 20));
         byte[] params = new byte[4];
         ByteUtil.shortToBytes((short) width, params, 0, true);
         ByteUtil.shortToBytes((short) heigth, params, 2, true);
