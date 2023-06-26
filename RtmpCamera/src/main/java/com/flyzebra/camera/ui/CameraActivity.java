@@ -105,11 +105,11 @@ public class CameraActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void notifyPCMFrame(byte[] data, int size, int sample, int channel, int format) {
-        byte[] params = new byte[6];
-        ByteUtil.shortToBytes((short) format, params, 0, true);
-        ByteUtil.shortToBytes((short) sample, params, 2, true);
+    public void notifyPCMFrame(byte[] data, int size, int sample, int channel, int bitrate) {
+        byte[] params = new byte[10];
+        ByteUtil.intToBytes(sample, params, 0, true);
         ByteUtil.shortToBytes((short) channel, params, 4, true);
+        ByteUtil.intToBytes(bitrate, params, 6, true);
         Notify.get().handledata(NotifyType.NOTI_MICOUT_PCM, data, size, params);
     }
 }

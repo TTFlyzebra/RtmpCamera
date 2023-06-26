@@ -89,7 +89,7 @@ public class ByteUtil {
     }
 
     public static int bytes2Int(byte[] bytes, int offset, boolean littleEndian) {
-        short value = 0;
+        int value = 0;
         for (int count = 0; count < 4; ++count) {
             int shift = (littleEndian ? count : (3 - count)) << 3;
             value |= ((int) 0xff << shift) & ((int) bytes[offset + count] << shift);

@@ -51,7 +51,7 @@ public class EglCamera{
     private byte[] nv12;
 
     private final String CAMERA_ID_KEY = "CAMERA_ID_KEY";
-    public static String cameraID = "1";
+    public static String cameraID = "0";
 
     private CameraManager mCameraManager;
     private CaptureRequest.Builder mBuilder;
@@ -76,7 +76,7 @@ public class EglCamera{
         mCamThread.start();
         mCamBkHandler = new Handler(mCamThread.getLooper());
         mCameraManager = (CameraManager) mContext.getSystemService(Context.CAMERA_SERVICE);
-        cameraID = (String) SPUtil.get(mContext, CAMERA_ID_KEY, "1");
+        cameraID = (String) SPUtil.get(mContext, CAMERA_ID_KEY, "0");
         mEglGLSurface = new EglGLSurface(mContext, this);
     }
 

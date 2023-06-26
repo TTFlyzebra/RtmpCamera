@@ -111,8 +111,8 @@ public class RtmpusherService implements VideoEncoderCB, AudioEncoderCB, INotify
     }
 
     @Override
-    public void notifyAacHead(byte[] head, int size) {
-        rtmpDump.sendAacHead(head, size);
+    public void notifyAacHead(byte[] head, int headLen) {
+        rtmpDump.sendAacHead(head, headLen);
     }
 
     @Override
@@ -124,21 +124,27 @@ public class RtmpusherService implements VideoEncoderCB, AudioEncoderCB, INotify
     public void notify(byte[] data, int size) {
     }
 
+    private static final Object codecLocked = new Object();
+
     @Override
     public void handle(int type, byte[] data, int size, byte[] params) {
         if (NotifyType.NOTI_CAMFIX_YUV == type) {
-            if (!videoEncoder.isCodecInit()) {
-                int width = ByteUtil.bytes2Short(params, 0, true);
-                int height = ByteUtil.bytes2Short(params, 2, true);
-                videoEncoder.initCodec(Config.CAM_MIME_TYPE, width, height, Config.CAM_BIT_RATE);
+            synchronized (codecLocked) {
+                if (!videoEncoder.isCodecInit()) {
+                    int width = ByteUtil.bytes2Short(params, 0, true);
+                    int height = ByteUtil.bytes2Short(params, 2, true);
+                    videoEncoder.initCodec(Config.CAM_MIME_TYPE, width, height, Config.CAM_BIT_RATE);
+                }
             }
             videoEncoder.inYuvData(data, size, System.nanoTime() / 1000);
         } else if (NotifyType.NOTI_MICOUT_PCM == type) {
-            if (!audioEncoder.isCodecInit()) {
-                int sample = ByteUtil.bytes2Short(params, 0, true);
-                int channels = ByteUtil.bytes2Short(params, 2, true);
-                int bitrate = ByteUtil.bytes2Short(params, 4, true);
-                audioEncoder.initCodec(Config.MIC_MIME_TYPE, sample, channels, bitrate);
+            synchronized (codecLocked) {
+                if (!audioEncoder.isCodecInit()) {
+                    int sample = ByteUtil.bytes2Int(params, 0, true);
+                    int channels = ByteUtil.bytes2Short(params, 4, true);
+                    int bitrate = ByteUtil.bytes2Int(params, 6, true);
+                    audioEncoder.initCodec(Config.MIC_MIME_TYPE, sample, channels, bitrate);
+                }
             }
             audioEncoder.inPumData(data, size, System.nanoTime() / 1000);
         }
