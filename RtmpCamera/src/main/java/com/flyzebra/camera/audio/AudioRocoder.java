@@ -16,6 +16,7 @@ import android.media.MediaRecorder;
 import androidx.core.app.ActivityCompat;
 
 import com.flyzebra.camera.Config;
+import com.flyzebra.utils.ByteUtil;
 import com.flyzebra.utils.FlyLog;
 
 import java.util.ArrayList;
@@ -35,13 +36,14 @@ public class AudioRocoder implements Runnable {
         this.sample = sample;
         this.channel = channel;
         this.format = format;
+        FlyLog.d("recode audio %d-%d-%d", sample, channel, format);
         int bufferSize = AudioRecord.getMinBufferSize(sample, channel, format);
         if (ActivityCompat.checkSelfPermission(context,
                 Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             FlyLog.e("check audio record permission failed!");
             return;
         }
-        mAudioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, sample, channel, format, bufferSize);
+        mAudioRecord = new AudioRecord(MediaRecorder.AudioSource.CAMCORDER, sample, channel, format, bufferSize);
         mRecordThread = new Thread(this);
     }
 
@@ -67,9 +69,13 @@ public class AudioRocoder implements Runnable {
             if (readSize <= 0) {
                 FlyLog.e("Audio read mic buffer error, readSize=%d", readSize);
             } else {
+                byte[] onePcm = new byte[readSize / 2];
+                for (int i = 0; i < readSize / 4; i++) {
+                    onePcm[i * 2 + 1] = pcm[i * 4 + 1];
+                }
+                FlyLog.e("PCM:%s", ByteUtil.bytes2HexString(pcm, 32));
                 for (IAudioListener listener : listeners) {
-                    //TODO::
-                    listener.notifyPCMFrame(pcm, readSize, sample, Config.MIC_CHANNELS, Config.MIC_BIT_RATE);
+                    listener.notifyPCMFrame(onePcm, readSize / 2, sample, Config.MIC_CHANNELS, Config.MIC_BIT_RATE);
                 }
             }
         }

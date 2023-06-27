@@ -27,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
     private final String[] mPermissions = {
             Manifest.permission.CAMERA,
             Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
     private final int REQUEST_CODE = 102;
