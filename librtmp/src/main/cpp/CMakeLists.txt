@@ -24,23 +24,23 @@ add_library(
 
 add_library(
         ssl
-        SHARED
+        STATIC
         IMPORTED)
 
 set_target_properties(
         ssl
         PROPERTIES IMPORTED_LOCATION
-        ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libssl.so)
+        ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libssl.a)
 
 add_library(
         crypto
-        SHARED
+        STATIC
         IMPORTED)
 
 set_target_properties(
         crypto
         PROPERTIES IMPORTED_LOCATION
-        ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libcrypto.so)
+        ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libcrypto.a)
 
 target_link_libraries(
         rtmpdump

@@ -16,7 +16,6 @@ import android.media.MediaRecorder;
 import androidx.core.app.ActivityCompat;
 
 import com.flyzebra.camera.Config;
-import com.flyzebra.utils.ByteUtil;
 import com.flyzebra.utils.FlyLog;
 
 import java.util.ArrayList;
@@ -73,7 +72,6 @@ public class AudioRocoder implements Runnable {
                 for (int i = 0; i < readSize / 4; i++) {
                     onePcm[i * 2 + 1] = pcm[i * 4 + 1];
                 }
-                FlyLog.e("PCM:%s", ByteUtil.bytes2HexString(pcm, 32));
                 for (IAudioListener listener : listeners) {
                     listener.notifyPCMFrame(onePcm, readSize / 2, sample, Config.MIC_CHANNELS, Config.MIC_BIT_RATE);
                 }
